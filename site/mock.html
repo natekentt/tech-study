@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Study — Mock Interview</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Tech Study</h1>
+    <p class="subtitle">Mock Interview</p>
+  </header>
+
+  <nav class="page-nav">
+    <a href="index.html" class="page-nav-link">Flashcards</a>
+    <a href="mock.html" class="page-nav-link active">Mock Interview</a>
+    <a href="star.html" class="page-nav-link">STAR Prep</a>
+    <a href="diagrams.html" class="page-nav-link">Diagrams</a>
+  </nav>
+
+  <div class="controls">
+    <div class="filter-bar">
+      <button class="filter-btn active" data-round="all">All</button>
+      <button class="filter-btn" data-round="k8s-crd">K8s & CRD Design</button>
+      <button class="filter-btn" data-round="systems">Systems Design</button>
+      <button class="filter-btn" data-round="rapid-fire">Rapid-Fire</button>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="stats">
+      <span id="q-position">1 / —</span>
+    </div>
+  </div>
+
+  <div class="mock-container">
+    <div class="mock-question" id="mock-question"></div>
+
+    <div class="timer-bar">
+      <span class="timer-display" id="timer-display">3:00</span>
+      <div class="timer-buttons">
+        <button class="timer-btn" id="btn-timer-start">Start</button>
+        <button class="timer-btn" id="btn-timer-reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="answer-area">
+      <label class="answer-label" for="answer-input">Your Answer</label>
+      <textarea id="answer-input" class="answer-input" rows="8" placeholder="Type your answer here..."></textarea>
+      <div class="answer-actions">
+        <button class="action-btn" id="btn-save">Save</button>
+        <span class="save-confirm" id="save-confirm">Saved!</span>
+      </div>
+    </div>
+
+    <div class="strong-answer-section">
+      <button class="action-btn" id="btn-show-answer">Show Strong Answer</button>
+      <div class="strong-answer" id="strong-answer"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" id="btn-prev" title="Previous (←)">Prev</button>
+    <button class="nav-btn" id="btn-next" title="Next (→)">Next</button>
+  </div>
+
+  <script src="storage.js"></script>
+  <script src="mock-questions.js"></script>
+  <script src="mock.js"></script>
+</body>
+</html>

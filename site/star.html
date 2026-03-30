@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Study — STAR Prep</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Tech Study</h1>
+    <p class="subtitle">STAR Prep</p>
+  </header>
+
+  <nav class="page-nav">
+    <a href="index.html" class="page-nav-link">Flashcards</a>
+    <a href="mock.html" class="page-nav-link">Mock Interview</a>
+    <a href="star.html" class="page-nav-link active">STAR Prep</a>
+    <a href="diagrams.html" class="page-nav-link">Diagrams</a>
+  </nav>
+
+  <div class="controls">
+    <div class="filter-bar">
+      <button class="filter-btn active" data-category="all">All</button>
+      <button class="filter-btn" data-category="leadership">Leadership</button>
+      <button class="filter-btn" data-category="technical">Technical</button>
+      <button class="filter-btn" data-category="teamwork">Teamwork</button>
+      <button class="filter-btn" data-category="platform">Platform & Systems</button>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="stats">
+      <span id="q-position">1 / —</span>
+      <span id="answered-count">0 answered</span>
+    </div>
+  </div>
+
+  <div class="star-container">
+    <div class="star-prompt" id="star-prompt"></div>
+
+    <div class="star-actions" id="star-actions">
+      <button class="action-btn star-start-btn" id="btn-start-writing">Start Writing</button>
+      <button class="action-btn star-show-prev-btn" id="btn-show-previous" style="display:none;">Show Previous Answer</button>
+    </div>
+
+    <div class="star-fields" id="star-fields">
+      <div class="star-field">
+        <label for="star-situation">Situation</label>
+        <textarea id="star-situation" class="answer-input" rows="3" placeholder="Set the scene — what was the context?"></textarea>
+      </div>
+      <div class="star-field">
+        <label for="star-task">Task</label>
+        <textarea id="star-task" class="answer-input" rows="3" placeholder="What was your specific responsibility?"></textarea>
+      </div>
+      <div class="star-field">
+        <label for="star-action">Action</label>
+        <textarea id="star-action" class="answer-input" rows="4" placeholder="What steps did you take?"></textarea>
+      </div>
+      <div class="star-field">
+        <label for="star-result">Result</label>
+        <textarea id="star-result" class="answer-input" rows="3" placeholder="What was the outcome? Quantify if possible."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" id="btn-prev" title="Previous (←)">Prev</button>
+    <button class="nav-btn" id="btn-next" title="Next (→)">Next</button>
+  </div>
+
+  <div class="actions">
+    <button class="action-btn" id="btn-add-prompt">+ Add Prompt</button>
+  </div>
+
+  <div class="modal-overlay" id="add-prompt-modal">
+    <div class="modal">
+      <h2 class="modal-title">Add Custom Prompt</h2>
+      <label for="new-prompt-category">Category</label>
+      <select id="new-prompt-category">
+        <option value="leadership">Leadership & Influence</option>
+        <option value="technical">Technical Problem Solving</option>
+        <option value="teamwork">Collaboration & Teamwork</option>
+        <option value="platform">Platform & Systems</option>
+      </select>
+      <label for="new-prompt-text">Prompt</label>
+      <textarea id="new-prompt-text" rows="3" placeholder="Enter your STAR prompt..."></textarea>
+      <div class="modal-actions">
+        <button class="action-btn modal-save" id="btn-save-prompt">Save</button>
+        <button class="action-btn" id="btn-cancel-prompt">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="storage.js"></script>
+  <script src="star-questions.js"></script>
+  <script src="star.js"></script>
+</body>
+</html>

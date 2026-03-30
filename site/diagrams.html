@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Study — Diagrams</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Tech Study</h1>
+    <p class="subtitle">Diagrams</p>
+  </header>
+
+  <nav class="page-nav">
+    <a href="index.html" class="page-nav-link">Flashcards</a>
+    <a href="mock.html" class="page-nav-link">Mock Interview</a>
+    <a href="star.html" class="page-nav-link">STAR Prep</a>
+    <a href="diagrams.html" class="page-nav-link active">Diagrams</a>
+  </nav>
+
+  <div class="controls">
+    <div class="filter-bar">
+      <button class="filter-btn active" data-category="all">All</button>
+      <button class="filter-btn" data-category="k8s">K8s Architecture</button>
+      <button class="filter-btn" data-category="crd">CRD / API Design</button>
+      <button class="filter-btn" data-category="systems">Systems Design</button>
+      <button class="filter-btn" data-category="dx">Platform DX</button>
+      <button class="filter-btn" data-category="networking">Networking</button>
+      <button class="filter-btn" data-category="security">Security</button>
+      <button class="filter-btn" data-category="resiliency">Resiliency / Observability</button>
+    </div>
+    <div class="stats">
+      <span id="diagram-count">0 diagrams</span>
+    </div>
+  </div>
+
+  <div class="diagrams-container">
+    <div class="actions" style="margin-bottom: 1rem;">
+      <button class="action-btn" id="btn-add-diagram">+ Add Diagram</button>
+    </div>
+
+    <div class="diagrams-grid" id="diagrams-grid"></div>
+    <div class="diagrams-empty" id="diagrams-empty" style="display:none;">No diagrams yet. Upload one to get started.</div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div class="modal-overlay" id="upload-modal">
+    <div class="modal">
+      <h2 class="modal-title">Add Diagram</h2>
+      <label for="diagram-title">Title</label>
+      <input type="text" id="diagram-title" class="modal-input" placeholder="e.g. K8s Control Plane">
+      <label for="diagram-category">Category</label>
+      <select id="diagram-category">
+        <option value="k8s">K8s Architecture</option>
+        <option value="crd">CRD / API Design</option>
+        <option value="systems">Systems Design</option>
+        <option value="dx">Platform DX</option>
+        <option value="networking">Networking</option>
+        <option value="security">Security</option>
+        <option value="resiliency">Resiliency / Observability</option>
+      </select>
+      <label>Image</label>
+      <div class="diagram-dropzone" id="diagram-dropzone">
+        <p>Drag & drop an image here, or click to browse</p>
+        <input type="file" id="diagram-file" accept="image/*" style="display:none;">
+      </div>
+      <div class="diagram-preview" id="diagram-preview" style="display:none;">
+        <img id="preview-img" src="" alt="Preview">
+      </div>
+      <label for="diagram-comment">Comment</label>
+      <textarea id="diagram-comment" rows="3" placeholder="Notes about this diagram..."></textarea>
+      <div class="modal-actions">
+        <button class="action-btn modal-save" id="btn-save-diagram">Save</button>
+        <button class="action-btn" id="btn-cancel-diagram">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox" style="display:none;">
+    <img id="lightbox-img" src="" alt="Full size diagram">
+  </div>
+
+  <script src="storage.js"></script>
+  <script src="diagrams.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Study — Flashcards</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Tech Study</h1>
+    <p class="subtitle">Interview Flashcards</p>
+  </header>
+
+  <nav class="page-nav">
+    <a href="index.html" class="page-nav-link active">Flashcards</a>
+    <a href="mock.html" class="page-nav-link">Mock Interview</a>
+    <a href="star.html" class="page-nav-link">STAR Prep</a>
+    <a href="diagrams.html" class="page-nav-link">Diagrams</a>
+  </nav>
+
+  <div class="controls">
+    <div class="filter-bar">
+      <button class="filter-btn active" data-category="all">All</button>
+      <button class="filter-btn" data-category="k8s">K8s Architecture</button>
+      <button class="filter-btn" data-category="crd">CRD / API Design</button>
+      <button class="filter-btn" data-category="systems">Systems Design</button>
+      <button class="filter-btn" data-category="dx">Platform DX</button>
+      <button class="filter-btn" data-category="networking">Networking</button>
+      <button class="filter-btn" data-category="security">Security</button>
+      <button class="filter-btn" data-category="resiliency">Resiliency / Observability</button>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+    <div class="stats">
+      <span id="card-position">1 / —</span>
+      <span id="score">✓ <span id="correct-count">0</span>  ✗ <span id="wrong-count">0</span></span>
+    </div>
+  </div>
+
+  <div class="card-container">
+    <div class="card" id="flashcard">
+      <div class="card-inner">
+        <div class="card-front">
+          <span class="card-category" id="card-category"></span>
+          <span class="card-stats" id="card-stats"></span>
+          <p class="card-text" id="card-question"></p>
+          <span class="hint">Click or press Space to reveal</span>
+        </div>
+        <div class="card-back">
+          <span class="card-category" id="card-category-back"></span>
+          <span class="card-stats" id="card-stats-back"></span>
+          <div class="card-text" id="card-answer"></div>
+          <div class="card-back-actions">
+            <button class="mastered-btn" id="btn-mastered">Mark Mastered</button>
+            <button class="edit-card-btn" id="btn-edit-card" style="display:none;">Edit Card</button>
+            <button class="delete-card-btn" id="btn-delete-card" style="display:none;">Delete Card</button>
+          </div>
+          <div class="notes-section" id="notes-section">
+            <div class="notes-header">My Notes</div>
+            <div class="notes-display" id="notes-display"></div>
+            <button class="notes-edit-btn" id="btn-notes-edit">Edit</button>
+            <div class="notes-editor" id="notes-editor">
+              <textarea class="notes-textarea" id="notes-textarea" rows="4" placeholder="Add your notes here..."></textarea>
+              <span class="md-hint">Supports markdown</span>
+              <div class="notes-actions">
+                <button class="action-btn" id="btn-notes-save">Save</button>
+                <button class="action-btn" id="btn-notes-delete">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn nav-prev" id="btn-prev" title="Previous card">Back</button>
+    <button class="nav-btn" id="btn-wrong" title="Got it wrong (←)">✗ Missed</button>
+    <button class="nav-btn" id="btn-flip" title="Flip card (Space)">Flip</button>
+    <button class="nav-btn" id="btn-right" title="Got it right (→)">✓ Got it</button>
+    <button class="nav-btn nav-next" id="btn-next" title="Next card">Next</button>
+  </div>
+
+  <div class="actions">
+    <button class="action-btn" id="btn-shuffle">Shuffle</button>
+    <button class="action-btn" id="btn-reset">Reset</button>
+    <button class="action-btn" id="btn-add-card">+ Add Card</button>
+    <button class="action-btn" id="btn-hide-mastered">Hide Mastered</button>
+  </div>
+
+  <div class="modal-overlay" id="add-card-modal">
+    <div class="modal">
+      <h2 class="modal-title">Add Custom Card</h2>
+      <label for="new-card-category">Category</label>
+      <select id="new-card-category">
+        <option value="k8s">K8s Architecture</option>
+        <option value="crd">CRD / API Design</option>
+        <option value="systems">Systems Design</option>
+        <option value="dx">Platform DX</option>
+        <option value="networking">Networking</option>
+        <option value="security">Security</option>
+        <option value="resiliency">Resiliency / Observability</option>
+      </select>
+      <label for="new-card-question">Question</label>
+      <textarea id="new-card-question" rows="3" placeholder="Enter your question..."></textarea>
+      <span class="md-hint">Supports markdown</span>
+      <label for="new-card-answer">Answer</label>
+      <textarea id="new-card-answer" rows="4" placeholder="Enter the answer..."></textarea>
+      <span class="md-hint">Supports markdown</span>
+      <div class="modal-actions">
+        <button class="action-btn modal-save" id="btn-save-new-card">Save</button>
+        <button class="action-btn" id="btn-cancel-new-card">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="storage.js"></script>
+  <script src="cards.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
