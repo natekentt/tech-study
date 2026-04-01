@@ -1473,5 +1473,24 @@ Runs as a <strong>validating admission webhook</strong>. Intercepts API requests
 <strong>0:10 — Mitigate:</strong> Revert the payments-service deploy via Argo CD (git revert + sync). Pods come back healthy. Error rate drops.<br><br>
 <strong>0:15 — Verify:</strong> Error budget burn rate back to normal. All dashboards green. Update incident Slack channel.<br><br>
 <strong>Next day:</strong> Blameless postmortem. Action items: add ConfigMap validation in CI, add integration test for config parsing, improve alert message with deploy correlation.`
+  },
+  {
+    id: "k8s-19",
+    category: "k8s",
+    q: "How do GPUs work in Kubernetes? When do you need them vs just CPU?",
+    a: `<strong>When you need GPUs:</strong><ul>
+<li><strong>ML model training/inference</strong> — neural networks, LLMs, computer vision</li>
+<li><strong>Video encoding/transcoding</strong></li>
+<li><strong>Graphics rendering</strong> (relevant for PlayStation)</li>
+</ul>
+<strong>When CPU is enough:</strong> API servers, web apps, data pipelines, CI/CD, most platform engineering work. GPU is overkill and expensive for general compute.<br><br>
+<strong>How K8s handles GPUs:</strong><ul>
+<li>Install <strong>NVIDIA device plugin</strong> (DaemonSet) — exposes GPUs as a schedulable resource</li>
+<li>Request in pod spec: <code>resources.limits: nvidia.com/gpu: 1</code></li>
+<li>GPUs are <strong>not shareable</strong> by default — one pod gets a whole GPU (unlike CPU which is divisible)</li>
+<li><strong>GPU time-slicing</strong> or <strong>MIG (Multi-Instance GPU)</strong> on A100s can share a GPU across pods</li>
+</ul>
+<strong>Scheduling:</strong> Use <strong>taints + tolerations</strong> to isolate GPU nodes — prevent non-GPU workloads from landing on expensive GPU nodes. Use <strong>node selectors</strong> or <strong>node affinity</strong> to target GPU node pools.<br><br>
+<strong>Cost consideration:</strong> GPU nodes are 5-10x more expensive than CPU nodes. Use <strong>cluster autoscaler</strong> to scale GPU node pools to zero when idle. Spot/preemptible instances for training workloads that can tolerate interruption.`
   }
 ];
