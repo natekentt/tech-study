@@ -1269,5 +1269,209 @@ Within the same QoS class, pods using the most resources relative to their reque
 <li><strong>GitHub Copilot Enterprise</strong> — code completion + codebase-aware chat. Good for IaC and K8s manifests.</li>
 </ul>
 <strong>Stack recommendation:</strong> Claude Agent SDK or LangGraph for orchestration → MCP servers for tool access → LangSmith for observability → K8sGPT or Robusta for quick wins while building custom agents.`
+  },
+
+  // ── Gap fillers — Systems Design ───────────────────────────
+  {
+    id: "sys-07",
+    category: "systems",
+    q: "How would you design monitoring for a brand new service on Day 1?",
+    a: `<strong>Before deploy:</strong><ul>
+<li><strong>ServiceMonitor</strong> CRD — Prometheus auto-discovers your <code>/metrics</code> endpoint</li>
+<li><strong>RED dashboards</strong> in Grafana — Rate, Errors, Duration. Template it so every service gets one for free.</li>
+<li><strong>Readiness + liveness probes</strong> — health endpoints that actually check dependencies</li>
+</ul>
+<strong>SLO setup:</strong><ul>
+<li>Define <strong>SLIs</strong> — latency P99, error rate, availability</li>
+<li>Set <strong>SLOs</strong> — 99.9% availability, P99 < 200ms</li>
+<li>Configure <strong>burn rate alerts</strong> — alert when consuming error budget too fast</li>
+</ul>
+<strong>Traces + Logs:</strong><ul>
+<li>OTel SDK or service mesh auto-instrumentation for <strong>distributed traces</strong></li>
+<li>Structured JSON logs with <code>trace_id</code>, <code>service</code>, <code>level</code></li>
+</ul>
+<strong>Goal:</strong> If this service breaks at 3am, the on-call engineer can diagnose it from dashboards alone without reading source code.`
+  },
+  {
+    id: "sys-08",
+    category: "systems",
+    q: "How would you handle a cluster upgrade across hundreds of services?",
+    a: `<strong>Never big-bang.</strong> Phased, tested, reversible:<br><br>
+<strong>Prep:</strong><ol>
+<li>Check <strong>API deprecations</strong> — run <code>pluto</code> or <code>kubent</code> to find deprecated APIs in manifests</li>
+<li>Review <strong>PDBs</strong> — ensure all critical services have them</li>
+<li>Test upgrade in <strong>staging</strong> first — run full integration test suite</li>
+</ol>
+<strong>Rollout:</strong><ol>
+<li>Upgrade <strong>control plane</strong> first (API server, scheduler, controller manager)</li>
+<li>Upgrade <strong>worker nodes</strong> in waves — canary group (5%), then 25%, 50%, 100%</li>
+<li><strong>Cordon + drain</strong> each node — PDBs protect availability during drain</li>
+<li>Monitor <strong>error rates, pod restarts, scheduling failures</strong> between waves</li>
+</ol>
+<strong>Rollback plan:</strong> Keep old node pool until new nodes are validated. If things break, uncordon old nodes and drain new ones.<br><br>
+<strong>Communication:</strong> Maintenance window announced. Teams know to watch their services. Shared Slack channel for real-time updates.`
+  },
+  {
+    id: "sys-09",
+    category: "systems",
+    q: "Explain blue-green vs canary vs rolling deployments.",
+    a: `<strong>Rolling (K8s default):</strong><ul>
+<li>Gradually replace old pods with new ones</li>
+<li>Controlled by <code>maxSurge</code> and <code>maxUnavailable</code></li>
+<li>Simple, no extra infra. Rollback = new rollout of old version.</li>
+</ul>
+<strong>Blue-Green:</strong><ul>
+<li>Two full environments — blue (current) and green (new)</li>
+<li>Switch traffic all at once (DNS or LB swap)</li>
+<li>Instant rollback (switch back to blue). Expensive — 2x resources.</li>
+</ul>
+<strong>Canary:</strong><ul>
+<li>Route a <strong>small %</strong> of real traffic to new version (5% → 25% → 100%)</li>
+<li>Monitor error rates between steps</li>
+<li>Requires service mesh (Istio VirtualService) or ingress traffic splitting</li>
+<li>Most control, best for high-risk changes</li>
+</ul>
+<strong>Choose:</strong> Rolling for most deploys. Canary for risky changes. Blue-green when you need instant cutover/rollback.`
+  },
+
+  // ── Gap fillers — K8s ──────────────────────────────────────
+  {
+    id: "k8s-16",
+    category: "k8s",
+    q: "What is a Kubernetes Operator? How is it different from a controller?",
+    a: `<strong>Controller</strong> — a reconciliation loop that watches resources and converges actual state to desired state. Built-in examples: Deployment controller, ReplicaSet controller.<br><br>
+<strong>Operator</strong> = CRD + custom controller. It extends Kubernetes with <strong>domain-specific knowledge</strong>. The controller knows how to manage a complex application (database, message queue, monitoring stack).<br><br>
+<strong>Example:</strong> Prometheus Operator:<ul>
+<li>CRDs: <code>Prometheus</code>, <code>ServiceMonitor</code>, <code>AlertmanagerConfig</code></li>
+<li>Controller watches these CRDs and creates/configures the actual Prometheus pods, config files, and alert rules</li>
+</ul>
+<strong>Frameworks:</strong> Operator SDK (Go, Ansible, Helm), Kubebuilder (Go), KUDO.<br><br>
+<strong>Key insight:</strong> Operators encode <strong>operational knowledge as code</strong>. Instead of a runbook saying "to scale Postgres, do X, Y, Z" — the operator does it automatically.`
+  },
+  {
+    id: "k8s-17",
+    category: "k8s",
+    q: "What are init containers and sidecar containers?",
+    a: `<strong>Init containers</strong> — run <strong>before</strong> app containers start. Run to completion sequentially.<ul>
+<li>Wait for a dependency to be ready</li>
+<li>Populate a shared volume with config/data</li>
+<li>Run database migrations</li>
+<li>If an init container fails, the pod restarts</li>
+</ul>
+<strong>Sidecar containers</strong> — run <strong>alongside</strong> the app container for the pod's lifetime.<ul>
+<li>Envoy proxy (service mesh)</li>
+<li>Log shipper (Fluent Bit)</li>
+<li>Vault agent (secret injection)</li>
+</ul>
+<strong>K8s 1.28+:</strong> Native sidecar support via <code>restartPolicy: Always</code> on init containers — they start first but keep running. Solves the ordering problem (sidecar ready before app starts).`
+  },
+  {
+    id: "k8s-18",
+    category: "k8s",
+    q: "How does pod-to-pod communication work across nodes?",
+    a: `Every pod gets a <strong>unique IP</strong> from the pod CIDR. The <strong>CNI plugin</strong> handles routing:<br><br>
+<strong>Same node:</strong> Traffic goes through the Linux bridge/veth pair. Fast, no encapsulation needed.<br><br>
+<strong>Cross node:</strong> Depends on CNI mode:<ul>
+<li><strong>Overlay (VXLAN/Geneve)</strong> — encapsulates pod traffic in UDP packets between nodes. Works everywhere but adds overhead. (Flannel, Calico VXLAN)</li>
+<li><strong>BGP routing</strong> — advertises pod CIDRs via BGP to the network fabric. No encapsulation, better performance. Requires network support. (Calico BGP, Cilium)</li>
+<li><strong>Cloud routes</strong> — cloud provider manages routing tables. (GKE, EKS VPC CNI — pods get VPC IPs directly)</li>
+</ul>
+<strong>Key:</strong> The app doesn't know or care which node the target pod is on. The CNI makes it transparent.`
+  },
+
+  // ── Gap fillers — Networking ───────────────────────────────
+  {
+    id: "net-13",
+    category: "networking",
+    q: "How does Istio traffic management work for fault injection and testing?",
+    a: `Istio can inject failures into live traffic for <strong>resilience testing</strong> without changing application code:<br><br>
+<strong>Delay injection:</strong><pre><code>apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+spec:
+  http:
+  - fault:
+      delay:
+        percentage:
+          value: 10
+        fixedDelay: 5s
+    route:
+    - destination:
+        host: payments</code></pre>
+10% of requests to payments get a 5s delay. Tests timeout handling.<br><br>
+<strong>Abort injection:</strong> Return HTTP 500 for a percentage of traffic. Tests circuit breaker behavior.<br><br>
+<strong>Traffic mirroring (shadowing):</strong> Copy live traffic to a new version without affecting users. Great for load testing v2 with real traffic patterns.<br><br>
+<strong>Why it matters for SRE:</strong> Test failure handling in production safely. Validate that circuit breakers, retries, and fallbacks actually work.`
+  },
+
+  // ── Gap fillers — Security ─────────────────────────────────
+  {
+    id: "sec-11",
+    category: "security",
+    q: "What is OPA/Gatekeeper and how does it enforce policy in K8s?",
+    a: `<strong>OPA</strong> (Open Policy Agent) — general-purpose policy engine. Policies written in <strong>Rego</strong> language.<br><br>
+<strong>Gatekeeper</strong> — K8s-native OPA integration using CRDs:<ul>
+<li><strong>ConstraintTemplate</strong> — defines the policy logic (Rego)</li>
+<li><strong>Constraint</strong> — applies the template with parameters to specific resources</li>
+</ul>
+Runs as a <strong>validating admission webhook</strong>. Intercepts API requests and rejects those that violate policy.<br><br>
+<strong>Example policies:</strong><ul>
+<li>All containers must have resource limits</li>
+<li>No images from untrusted registries</li>
+<li>All namespaces must have a cost-center label</li>
+<li>No privileged containers</li>
+<li>Ingress hostnames must be unique</li>
+</ul>
+<strong>Audit mode:</strong> Can report violations without blocking — useful for rollout. Shift left: run policies in CI too, not just at admission.`
+  },
+
+  // ── Gap fillers — Resiliency ───────────────────────────────
+  {
+    id: "res-26",
+    category: "resiliency",
+    q: "What is Grafana and how does it fit the observability stack?",
+    a: `<strong>Grafana</strong> is the <strong>visualization layer</strong> — dashboards and alerting for all your observability data.<br><br>
+<strong>Data sources:</strong><ul>
+<li><strong>Prometheus</strong> — metrics (PromQL queries)</li>
+<li><strong>Loki</strong> — logs (LogQL queries)</li>
+<li><strong>Tempo</strong> — traces (trace ID lookup)</li>
+<li>Plus Elasticsearch, CloudWatch, Datadog, etc.</li>
+</ul>
+<strong>Key features:</strong><ul>
+<li><strong>Dashboard as code</strong> — JSON models, versioned in Git, deployed via Grafana Operator or API</li>
+<li><strong>Alerting</strong> — can fire alerts directly from dashboard queries (alternative to Alertmanager)</li>
+<li><strong>Explore view</strong> — ad-hoc querying across metrics, logs, and traces. Jump from metric spike → correlated logs → trace.</li>
+<li><strong>Variables</strong> — template dashboards (dropdown for namespace, service, cluster)</li>
+</ul>
+<strong>SRE use:</strong> Every service gets a RED dashboard (templated). SLO dashboards show error budget remaining. On-call engineers live in Grafana during incidents.`
+  },
+  {
+    id: "res-27",
+    category: "resiliency",
+    q: "What is Loki and how is it different from ELK?",
+    a: `<strong>Loki</strong> — log aggregation by Grafana Labs. The "Prometheus for logs."<br><br>
+<strong>Key difference from ELK:</strong> Loki does <strong>NOT</strong> index log content. It only indexes <strong>labels</strong> (namespace, pod, container). This makes it:<ul>
+<li><strong>Cheaper</strong> — far less storage and compute than Elasticsearch</li>
+<li><strong>Simpler</strong> — no complex index management</li>
+<li><strong>Slower for full-text search</strong> — trades query speed for cost savings</li>
+</ul>
+<strong>Architecture:</strong><ul>
+<li><strong>Promtail</strong> (DaemonSet) — scrapes logs from each node, adds K8s labels</li>
+<li><strong>Loki</strong> — stores and queries logs</li>
+<li><strong>Grafana</strong> — visualize and search with LogQL</li>
+</ul>
+<strong>When to use Loki:</strong> You want a lightweight, cost-effective log stack that integrates natively with Prometheus labels and Grafana dashboards.<br><br>
+<strong>When to use ELK:</strong> You need fast full-text search across massive log volumes, or complex log analytics.`
+  },
+  {
+    id: "res-28",
+    category: "resiliency",
+    q: "Walk through an on-call incident from page to resolution.",
+    a: `<strong>0:00 — Page fires:</strong> Alertmanager sends PagerDuty alert: "checkout error budget burn rate 10x." Acknowledge immediately.<br><br>
+<strong>0:02 — Assess:</strong> Open Grafana RED dashboard for checkout. Error rate spiked from 0.1% to 8%. P99 latency 3x normal. Started 5 min ago.<br><br>
+<strong>0:05 — Correlate:</strong> Check Argo CD — a deploy happened 7 min ago. Check traces in Tempo — failing requests all hit payments-service with connection timeouts.<br><br>
+<strong>0:08 — Diagnose:</strong> <code>kubectl get pods -n payments</code> — 3/5 pods CrashLoopBackOff. Logs show config parsing error from new ConfigMap.<br><br>
+<strong>0:10 — Mitigate:</strong> Revert the payments-service deploy via Argo CD (git revert + sync). Pods come back healthy. Error rate drops.<br><br>
+<strong>0:15 — Verify:</strong> Error budget burn rate back to normal. All dashboards green. Update incident Slack channel.<br><br>
+<strong>Next day:</strong> Blameless postmortem. Action items: add ConfigMap validation in CI, add integration test for config parsing, improve alert message with deploy correlation.`
   }
 ];
