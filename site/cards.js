@@ -1039,5 +1039,182 @@ Within the same QoS class, pods using the most resources relative to their reque
 </ul><br>
 <strong>In Kubernetes:</strong> Prometheus discovers scrape targets automatically via <strong>ServiceMonitors</strong> (CRDs from the Prometheus Operator). Pair with <strong>Grafana</strong> for dashboards.<br><br>
 <strong>Metric types:</strong> Counter (only goes up), Gauge (goes up/down), Histogram (bucketed distributions), Summary (percentiles).`
+  },
+
+  // ── AI for SRE ──────────────────────────────────────────────
+  {
+    id: "ai-01",
+    category: "ai",
+    q: "How would you use an AI agent to diagnose a K8s incident?",
+    a: `Build an <strong>incident triage agent</strong> with MCP tools that can query your infrastructure:<br><br>
+<strong>MCP tools:</strong><ul>
+<li><code>kubectl_get</code> — fetch pod status, events, describe output</li>
+<li><code>prometheus_query</code> — pull metrics (error rate, latency, CPU, memory)</li>
+<li><code>loki_query</code> — search logs by namespace, pod, trace ID</li>
+<li><code>argocd_status</code> — check recent deployments and sync status</li>
+</ul>
+<strong>Workflow:</strong> Engineer pages in with "Service X is 500ing." Agent pulls pod events, checks for OOMKills/CrashLoops, queries error rate spike timing, correlates with recent deploys, searches logs for stack traces — and presents a <strong>summary with probable root cause</strong> in seconds instead of 15 minutes of manual kubectl/Grafana digging.<br><br>
+<strong>Key:</strong> Agent doesn't fix — it <strong>accelerates diagnosis</strong>. Human decides the action.`
+  },
+  {
+    id: "ai-02",
+    category: "ai",
+    q: "What is MCP (Model Context Protocol) and why does it matter for platform engineering?",
+    a: `<strong>MCP</strong> is an open protocol that lets AI models call external tools through a standardized interface — like USB-C for AI integrations.<br><br>
+<strong>How it works:</strong><ul>
+<li><strong>MCP Server</strong> — exposes tools (functions) with typed inputs/outputs</li>
+<li><strong>MCP Client</strong> — AI model discovers available tools and calls them</li>
+<li>Model decides <strong>which tools to call and in what order</strong> based on the user's question</li>
+</ul>
+<strong>For platform engineering:</strong> Build MCP servers that wrap your internal APIs — K8s, CI/CD, monitoring, secrets, deployment. Engineers can then interact with infrastructure through natural language via Claude/Copilot instead of memorizing 50 CLI tools.<br><br>
+<strong>Security:</strong> MCP tools must enforce the same auth/RBAC as the underlying API. Propagate user identity — the agent should only access what the caller is authorized for.`
+  },
+  {
+    id: "ai-03",
+    category: "ai",
+    q: "How would you build AI-powered runbook automation?",
+    a: `<strong>Problem:</strong> Runbooks are docs that engineers follow during incidents. They're often stale, long, and require context-switching between docs and terminals.<br><br>
+<strong>Solution:</strong> Encode runbooks as <strong>agent workflows</strong>:<ol>
+<li>Alert fires (PagerDuty/Alertmanager)</li>
+<li>Agent receives alert context (service, namespace, metric that triggered)</li>
+<li>Agent follows runbook steps using MCP tools — checks pod health, queries metrics, inspects logs</li>
+<li>Agent executes <strong>safe remediation</strong> (restart pod, scale up replicas, rollback deploy) if within its authority</li>
+<li>Agent posts <strong>summary + actions taken</strong> to Slack incident channel</li>
+</ol>
+<strong>Guardrails:</strong> Read-only by default. Destructive actions require human approval. All actions logged for audit. Agent escalates to human if confidence is low or if the runbook doesn't match the symptoms.`
+  },
+  {
+    id: "ai-04",
+    category: "ai",
+    q: "How do you use AI to reduce toil in an SRE team?",
+    a: `Identify <strong>repetitive, manual tasks</strong> that engineers do daily and build AI-assisted workflows:<br><br>
+<strong>High-impact targets:</strong><ul>
+<li><strong>Log analysis</strong> — AI summarizes error patterns across thousands of log lines instead of manual grep</li>
+<li><strong>PR reviews for infra changes</strong> — AI validates Terraform/K8s manifests against policy before human review</li>
+<li><strong>Incident summarization</strong> — agent writes the postmortem timeline from Slack threads + alert history</li>
+<li><strong>Capacity reports</strong> — agent queries Prometheus, generates weekly resource utilization reports</li>
+<li><strong>Onboarding</strong> — chatbot that answers "how do I deploy X" using your internal docs as context</li>
+</ul>
+<strong>Approach:</strong> Don't build a general AI platform first. Pick the <strong>one task</strong> that wastes the most hours/week, automate it, prove value, then expand. Same lighthouse team pattern as any platform rollout.`
+  },
+  {
+    id: "ai-05",
+    category: "ai",
+    q: "How would you design an AI-powered K8s security scanner?",
+    a: `An agent that continuously audits cluster security posture:<br><br>
+<strong>MCP tools:</strong><ul>
+<li><code>kubectl_get</code> — list pods, RBAC roles, network policies, PSS labels</li>
+<li><code>trivy_scan</code> — scan running images for CVEs</li>
+<li><code>opa_eval</code> — evaluate resources against OPA/Gatekeeper policies</li>
+</ul>
+<strong>What it checks:</strong><ul>
+<li>Pods running as <strong>root</strong> or with privilege escalation</li>
+<li>Namespaces missing <strong>NetworkPolicies</strong> (default allow = risk)</li>
+<li>RBAC roles with <strong>wildcard permissions</strong></li>
+<li>Secrets not sourced from <strong>external secrets manager</strong></li>
+<li>Images with <strong>critical CVEs</strong> or no signature</li>
+<li>Service accounts with <strong>unnecessary token mounts</strong></li>
+</ul>
+<strong>Output:</strong> Prioritized report — critical/high/medium — with specific remediation steps. Runs on schedule or on-demand. Posts to Slack or creates Jira tickets.`
+  },
+  {
+    id: "ai-06",
+    category: "ai",
+    q: "What is context engineering and why does it matter for AI in production?",
+    a: `<strong>Context engineering</strong> = designing <em>what information</em> the AI model sees so it produces reliable, accurate results.<br><br>
+<strong>Techniques:</strong><ul>
+<li><strong>Spec-driven agents</strong> — structured instructions (CLAUDE.md, system prompts) that define behavior, constraints, and output format</li>
+<li><strong>Persisted memory</strong> — agent remembers past interactions, decisions, runbook outcomes</li>
+<li><strong>Hooks</strong> — pre/post processing steps that validate inputs and outputs</li>
+<li><strong>Summarization</strong> — compress long context (logs, metrics) into relevant summaries before sending to the model</li>
+<li><strong>Tool descriptions</strong> — clear, typed MCP tool definitions so the model knows exactly what each tool does</li>
+</ul>
+<strong>Why it matters:</strong> Without context engineering, AI is unreliable — hallucinations, wrong tool calls, missed context. With it, you get <strong>consistent, auditable, trustworthy</strong> AI workflows. This is the difference between a demo and a production system.`
+  },
+  {
+    id: "ai-07",
+    category: "ai",
+    q: "How would you roll out AI tooling to an SRE org that has no AI adoption?",
+    a: `Same pattern as any platform adoption — <strong>start small, prove value, expand:</strong><br><br>
+<strong>Phase 1 — Developer workflow (week 1-2):</strong><ul>
+<li>Get Claude Code / Copilot into engineers' hands</li>
+<li>Build shared spec files (CLAUDE.md) with team conventions, K8s patterns, coding standards</li>
+<li>Immediate win: faster PR reviews, IaC generation, debugging</li>
+</ul>
+<strong>Phase 2 — Internal MCP tools (month 1):</strong><ul>
+<li>Build MCP servers for your most-used internal APIs (K8s, monitoring, CI/CD)</li>
+<li>Engineers query infrastructure via natural language</li>
+</ul>
+<strong>Phase 3 — Automated workflows (month 2-3):</strong><ul>
+<li>Incident triage agent, security scanner, capacity reporter</li>
+<li>Start with read-only. Add write actions with approval gates.</li>
+</ul>
+<strong>Key:</strong> Don't pitch "AI." Pitch <strong>time saved</strong>. "This saves 2 hours per on-call shift" beats "we're using LLMs" every time.`
+  },
+  {
+    id: "ai-08",
+    category: "ai",
+    q: "How do you secure AI agents that have access to production infrastructure?",
+    a: `AI agents with MCP tools are powerful — and dangerous if not locked down:<br><br>
+<strong>Security layers:</strong><ol>
+<li><strong>Identity propagation</strong> — agent acts with the caller's identity, not a superuser. RBAC applies to the agent's actions.</li>
+<li><strong>Read-only by default</strong> — tools that query are always available. Tools that mutate require explicit approval.</li>
+<li><strong>Scope limits</strong> — agent can only access namespaces/clusters the user has access to</li>
+<li><strong>Audit logging</strong> — every tool call logged with who triggered it, what was called, inputs, outputs</li>
+<li><strong>Rate limiting</strong> — per-user/team token quotas prevent runaway costs and abuse</li>
+<li><strong>Hallucination guards</strong> — validate agent outputs against schema. If it generates a kubectl command, parse and verify before executing.</li>
+<li><strong>Human-in-the-loop</strong> — destructive actions (delete, scale to zero, rollback) require human confirmation</li>
+</ol>
+<strong>Principle:</strong> Treat AI agents like any other service — least privilege, audit trail, blast radius limits.`
+  },
+  {
+    id: "ai-09",
+    category: "ai",
+    q: "Scenario: An engineer asks the AI agent 'Why is checkout slow?' Walk through the agent workflow.",
+    a: `<strong>1. Parse intent:</strong> Service = checkout. Problem = high latency.<br><br>
+<strong>2. Agent calls MCP tools:</strong><ul>
+<li><code>prometheus_query</code>: <code>histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{service="checkout"}[5m]))</code> → P99 is 4.2s (normally 200ms)</li>
+<li><code>kubectl_get</code>: pods in checkout namespace → 2/5 pods in CrashLoopBackOff</li>
+<li><code>loki_query</code>: logs from crashing pods → <code>connection refused: payments-db:5432</code></li>
+<li><code>argocd_status</code>: payments-db had a config change deployed 20 min ago</li>
+</ul>
+<strong>3. Agent synthesizes:</strong> "Checkout P99 latency spiked to 4.2s starting 20 min ago. 2 of 5 checkout pods are crash-looping because they can't connect to payments-db. A config change was deployed to payments-db 20 minutes ago — likely the root cause."<br><br>
+<strong>4. Suggests action:</strong> "Roll back the payments-db config change? [Approve / Deny]"<br><br>
+<strong>Total time: ~30 seconds</strong> vs 15+ minutes of manual investigation.`
+  },
+  {
+    id: "ai-10",
+    category: "ai",
+    q: "How would you use AI to improve developer onboarding onto a K8s platform?",
+    a: `<strong>Problem:</strong> New engineers take weeks to learn internal tooling, deployment patterns, and where to find things.<br><br>
+<strong>Solution: Platform knowledge agent</strong> with context from your internal docs:<ul>
+<li><strong>Indexed sources</strong> — runbooks, architecture docs, READMEs, CRD schemas, example configs</li>
+<li><strong>MCP tools</strong> — can query live cluster state, show real examples of running services</li>
+</ul>
+<strong>What engineers can ask:</strong><ul>
+<li><em>"How do I deploy a new service?"</em> → step-by-step using your actual platform CRDs</li>
+<li><em>"What's the pattern for connecting to the shared Kafka cluster?"</em> → pulls from internal docs + shows live examples</li>
+<li><em>"Why is my pod pending?"</em> → queries the actual pod, explains the issue</li>
+</ul>
+<strong>Impact:</strong> Turns weeks of onboarding into hours. Reduces "how do I..." Slack messages. Keeps documentation living and queryable instead of stale wikis nobody reads.`
+  },
+  {
+    id: "ai-11",
+    category: "ai",
+    q: "What's the difference between using AI as a copilot vs. an agent in SRE?",
+    a: `<strong>Copilot</strong> — AI assists a human in real-time. Human drives, AI suggests.<ul>
+<li>Code completion while writing Terraform/K8s manifests</li>
+<li>Suggesting PromQL queries while debugging</li>
+<li>Explaining error messages in context</li>
+<li><strong>Always human-in-the-loop</strong></li>
+</ul>
+<strong>Agent</strong> — AI executes multi-step workflows autonomously with tools.<ul>
+<li>Receives an alert, diagnoses, and remediates (with approval)</li>
+<li>Runs scheduled security audits</li>
+<li>Generates capacity reports from live metrics</li>
+<li><strong>Human approves critical actions</strong></li>
+</ul>
+<strong>Start with copilot</strong> (low risk, immediate value). <strong>Graduate to agents</strong> as trust builds. The copilot phase teaches you what workflows are worth automating.<br><br>
+<strong>For PlayStation:</strong> Copilot for day-to-day engineering → MCP tools for infrastructure queries → agents for incident triage and toil automation.`
   }
 ];
