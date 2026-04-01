@@ -102,6 +102,82 @@ Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
 <strong>Ephemeral</strong>: when a pod dies, it's gone — replaced, not restarted. A new pod gets a new IP and identity. This is why you need Deployments/ReplicaSets to manage them.`
   },
 
+  {
+    id: "k8s-11",
+    category: "k8s",
+    q: "What happens when a node runs out of disk space?",
+    a: `The kubelet monitors disk via <strong>eviction thresholds</strong>:<ul>
+<li><code>nodefs.available</code> < 10% → soft eviction (grace period)</li>
+<li><code>nodefs.available</code> < 5% → hard eviction (immediate)</li>
+<li><code>imagefs.available</code> < 15% → garbage collect unused images</li>
+</ul>
+<strong>What gets cleaned:</strong> Dead containers first, then unused images, then pod eviction by QoS class (BestEffort → Burstable → Guaranteed).<br><br>
+<strong>Node goes NotReady</strong> if disk pressure persists. Kubelet sets <code>DiskPressure</code> condition and scheduler stops placing pods on it.<br><br>
+<strong>Prevention:</strong> Set resource limits, use ephemeral storage limits (<code>ephemeral-storage</code>), monitor with Prometheus <code>node_filesystem_avail_bytes</code>.`
+  },
+  {
+    id: "k8s-12",
+    category: "k8s",
+    q: "What is the difference between resource requests and limits for CPU vs memory?",
+    a: `<strong>CPU:</strong><ul>
+<li><strong>Request</strong> — guaranteed CPU time. Used by scheduler for placement.</li>
+<li><strong>Limit</strong> — max CPU. Exceeding it = <strong>throttled</strong> (slowed down, NOT killed).</li>
+<li>CPU is <strong>compressible</strong> — you can take it away without crashing.</li>
+</ul>
+<strong>Memory:</strong><ul>
+<li><strong>Request</strong> — guaranteed memory. Used by scheduler.</li>
+<li><strong>Limit</strong> — max memory. Exceeding it = <strong>OOMKilled</strong> (hard kill, exit code 137).</li>
+<li>Memory is <strong>incompressible</strong> — you can't take it back without killing the process.</li>
+</ul>
+<strong>Key insight:</strong> Some teams set no CPU limits (only requests) to avoid throttling, since CPU can be shared. Memory limits should <strong>always</strong> be set.`
+  },
+  {
+    id: "k8s-13",
+    category: "k8s",
+    q: "How does kubectl exec work under the hood?",
+    a: `<ol>
+<li><code>kubectl</code> sends request to <strong>API Server</strong></li>
+<li>API Server authenticates, authorizes (RBAC), checks admission</li>
+<li>API Server opens a <strong>SPDY/WebSocket connection</strong> to the <strong>kubelet</strong> on the target node</li>
+<li>Kubelet calls the <strong>container runtime</strong> (containerd) via CRI to exec into the container's namespace</li>
+<li>stdin/stdout/stderr are streamed back through the chain</li>
+</ol>
+<strong>Security note:</strong> This is powerful — it's shell access to a running container. Lock it down with RBAC (<code>pods/exec</code> verb). Audit log all exec commands. In production, prefer <strong>ephemeral debug containers</strong> (<code>kubectl debug</code>) over exec.`
+  },
+  {
+    id: "k8s-14",
+    category: "k8s",
+    q: "What are taints and tolerations? When would you use them?",
+    a: `<strong>Taints</strong> go on <strong>nodes</strong> — repel pods unless they tolerate the taint.<br>
+<strong>Tolerations</strong> go on <strong>pods</strong> — allow scheduling on tainted nodes.<br><br>
+<strong>Effects:</strong><ul>
+<li><code>NoSchedule</code> — won't schedule new pods (existing stay)</li>
+<li><code>PreferNoSchedule</code> — soft preference, avoid if possible</li>
+<li><code>NoExecute</code> — evicts existing pods too</li>
+</ul>
+<strong>Use cases:</strong><ul>
+<li><strong>Dedicated nodes</strong> — GPU nodes tainted so only ML workloads land there</li>
+<li><strong>Node draining</strong> — <code>kubectl drain</code> adds NoExecute taint</li>
+<li><strong>Infra isolation</strong> — system components tolerate control-plane taints</li>
+</ul>`
+  },
+  {
+    id: "k8s-15",
+    category: "k8s",
+    q: "A pod is stuck in Pending. What are the possible causes?",
+    a: `Pending = scheduler can't place the pod. Check <code>kubectl describe pod</code> Events.<br><br>
+<strong>Common causes:</strong><ul>
+<li><strong>Insufficient resources</strong> — no node has enough CPU/memory for the pod's requests</li>
+<li><strong>Node selectors / affinity</strong> — no node matches the required labels</li>
+<li><strong>Taints</strong> — all suitable nodes are tainted and pod lacks tolerations</li>
+<li><strong>PVC not bound</strong> — PersistentVolumeClaim can't find a matching PV or storage class</li>
+<li><strong>ResourceQuota exceeded</strong> — namespace hit its pod/CPU/memory quota</li>
+<li><strong>Too many pods</strong> — node at max pod count (default 110/node)</li>
+<li><strong>Topology constraints</strong> — pod topology spread can't be satisfied</li>
+</ul>
+<strong>Fix:</strong> Scale up nodes, adjust requests, relax affinity, or free up quota.`
+  },
+
   // ── CRD / API Design ─────────────────────────────────────────
   {
     id: "crd-01",
@@ -459,6 +535,38 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
 <strong>Headless Services</strong> (<code>clusterIP: None</code>): DNS returns pod IPs directly — used with StatefulSets so clients can address specific pods.`
   },
 
+  {
+    id: "net-11",
+    category: "networking",
+    q: "How do you debug DNS issues in Kubernetes?",
+    a: `<strong>Symptoms:</strong> Service discovery failing, connection timeouts, <code>Name or service not known</code> errors.<br><br>
+<strong>Debug steps:</strong><ol>
+<li><code>kubectl exec &lt;pod&gt; -- nslookup &lt;service&gt;</code> — can the pod resolve DNS?</li>
+<li>Check <strong>CoreDNS pods</strong> — are they running? <code>kubectl get pods -n kube-system -l k8s-app=kube-dns</code></li>
+<li>Check CoreDNS <strong>logs</strong> — look for errors, timeouts, SERVFAIL</li>
+<li>Check <code>/etc/resolv.conf</code> in the pod — is it pointing to CoreDNS ClusterIP?</li>
+<li><strong>ndots setting</strong> — default is 5, meaning short names get 5 search domain suffixes tried before querying externally. Can cause high DNS traffic.</li>
+</ol>
+<strong>Common fixes:</strong> Scale up CoreDNS, add NodeLocal DNSCache (DaemonSet), reduce <code>ndots</code> for external-heavy workloads.`
+  },
+  {
+    id: "net-12",
+    category: "networking",
+    q: "What is the difference between L4 and L7 load balancing?",
+    a: `<strong>L4 (Transport)</strong> — routes based on <strong>IP + port</strong>. Fast, simple, no payload inspection.<ul>
+<li>K8s Service (kube-proxy / IPVS)</li>
+<li>AWS NLB, TCP load balancers</li>
+<li>Can't route by path, headers, or hostname</li>
+</ul>
+<strong>L7 (Application)</strong> — routes based on <strong>HTTP headers, path, hostname, cookies</strong>. More powerful, more overhead.<ul>
+<li>Ingress controllers (nginx, Envoy)</li>
+<li>Service mesh (Istio VirtualService)</li>
+<li>AWS ALB, API gateways</li>
+<li>Can do canary routing, A/B testing, auth</li>
+</ul>
+<strong>Platform choice:</strong> L4 for raw TCP/gRPC performance. L7 for HTTP routing, observability, and traffic management.`
+  },
+
   // ── Security ──────────────────────────────────────────────────
   {
     id: "sec-01",
@@ -569,6 +677,36 @@ Istio's Citadel component manages certificates. Each service gets a cert from Is
 <li><code>STRICT</code> — mTLS only</li>
 </ul>
 Rollout: start PERMISSIVE, validate all services work, migrate to STRICT namespace by namespace.`
+  },
+
+  {
+    id: "sec-09",
+    category: "security",
+    q: "What is supply chain security for containers? How do you implement it?",
+    a: `Ensuring that the code you wrote is the code that's running — nothing tampered with in between.<br><br>
+<strong>Layers:</strong><ul>
+<li><strong>Image scanning</strong> — scan for CVEs in CI (Trivy, Snyk, Grype). Block deploys with critical vulns.</li>
+<li><strong>Image signing</strong> — sign images with <strong>cosign</strong> (Sigstore). Verify signatures before admission.</li>
+<li><strong>Admission enforcement</strong> — webhook that rejects unsigned or unscanned images</li>
+<li><strong>Base image policy</strong> — only allow images from trusted registries / approved base images</li>
+<li><strong>SBOM</strong> (Software Bill of Materials) — know exactly what's in every image</li>
+<li><strong>Least privilege builds</strong> — CI runners have minimal permissions, artifacts are immutable</li>
+</ul>
+<strong>Key principle:</strong> Trust nothing by default. Verify at every stage from code to runtime.`
+  },
+  {
+    id: "sec-10",
+    category: "security",
+    q: "How do you implement zero-trust networking in Kubernetes?",
+    a: `<strong>Zero trust = never trust, always verify.</strong> Even traffic inside the cluster must be authenticated and authorized.<br><br>
+<strong>Implementation:</strong><ol>
+<li><strong>mTLS everywhere</strong> — Istio STRICT mode. Every service proves its identity.</li>
+<li><strong>AuthorizationPolicies</strong> — explicit allow rules. Service A can call Service B, nothing else.</li>
+<li><strong>NetworkPolicies</strong> — L3/L4 default deny. Defense in depth alongside mesh.</li>
+<li><strong>RBAC</strong> — least privilege for humans and service accounts.</li>
+<li><strong>No implicit trust</strong> — being in the same namespace doesn't grant access.</li>
+</ol>
+<strong>Layers:</strong> NetworkPolicy (L3/L4) + Istio AuthorizationPolicy (L7) + mTLS (identity). Each layer catches what the others miss.`
   },
 
   // ── Resiliency / Observability ────────────────────────────────
@@ -716,5 +854,190 @@ Always have an escape hatch.`
 </ul>
 Flow: App (OTel SDK) → OTel Collector → Jaeger/Tempo (storage) → Grafana (visualization).<br><br>
 Service mesh bonus: Istio provides traces automatically for inter-service calls — no code changes.`
+  },
+  {
+    id: "res-15",
+    category: "resiliency",
+    q: "Walk through the pod termination lifecycle. Why does graceful shutdown matter?",
+    a: `<ol>
+<li>Pod marked for deletion → <strong>removed from Service endpoints immediately</strong> (no new traffic)</li>
+<li><strong>preStop hook</strong> runs (if defined) — e.g. <code>sleep 5</code> to let in-flight requests drain</li>
+<li><strong>SIGTERM</strong> sent to PID 1 in the container</li>
+<li>App has <code>terminationGracePeriodSeconds</code> (default 30s) to shut down cleanly</li>
+<li>If still running after grace period → <strong>SIGKILL</strong> (hard kill)</li>
+</ol>
+<strong>Why it matters:</strong> Without a preStop hook, there's a race condition — kube-proxy may still route traffic to the pod after SIGTERM. The sleep gives iptables rules time to update.<br><br>
+<strong>Common mistake:</strong> App doesn't handle SIGTERM → connections dropped mid-request.`
+  },
+  {
+    id: "res-16",
+    category: "resiliency",
+    q: "A pod is OOMKilled. How do you diagnose and fix it?",
+    a: `<strong>Diagnose:</strong><ul>
+<li><code>kubectl describe pod</code> → look for <code>OOMKilled</code> in last state, exit code 137</li>
+<li><code>kubectl top pod</code> → current memory usage vs limits</li>
+<li>Check Grafana/Prometheus: <code>container_memory_working_set_bytes</code> over time</li>
+<li>Was it a memory leak (gradual climb) or a spike (sudden burst)?</li>
+</ul><br>
+<strong>Fix:</strong><ul>
+<li><strong>Memory leak</strong> → fix the application code. Profile with language-specific tools.</li>
+<li><strong>Undersized limits</strong> → increase <code>resources.limits.memory</code>. Set requests ≈ normal usage, limits = reasonable headroom.</li>
+<li><strong>JVM/runtime</strong> → ensure the runtime respects container memory limits (e.g. <code>-XX:MaxRAMPercentage=75</code>)</li>
+</ul>
+<strong>Key:</strong> OOMKill = hard kill. No graceful shutdown. Data can be lost.`
+  },
+  {
+    id: "res-17",
+    category: "resiliency",
+    q: "Pod is stuck in CrashLoopBackOff. How do you debug it?",
+    a: `CrashLoopBackOff = container starts, crashes, restarts with exponential backoff (10s, 20s, 40s… up to 5min).<br><br>
+<strong>Steps:</strong><ol>
+<li><code>kubectl describe pod</code> → check <strong>Events</strong> and <strong>Last State</strong> (exit code, reason)</li>
+<li><code>kubectl logs &lt;pod&gt; --previous</code> → logs from the <strong>crashed</strong> container</li>
+<li>Exit code <strong>1</strong> = app error. Exit code <strong>137</strong> = OOMKilled. Exit code <strong>139</strong> = segfault.</li>
+<li>Check if <strong>liveness probe</strong> is too aggressive — killing the container before it's ready</li>
+<li>Check <strong>config/secrets</strong> — missing env vars, bad connection strings</li>
+<li>Check <strong>image</strong> — wrong tag, missing entrypoint</li>
+</ol>
+<strong>Quick debug:</strong> Override entrypoint with <code>command: ["sleep", "3600"]</code> to get a shell and inspect.`
+  },
+  {
+    id: "res-18",
+    category: "resiliency",
+    q: "What happens when etcd loses quorum? How do you prevent and recover?",
+    a: `<strong>Impact:</strong> Cluster becomes <strong>read-only</strong>. No new pods, no updates, no scheduling. Existing workloads keep running but can't be modified.<br><br>
+<strong>Quorum:</strong> Requires majority of nodes. 3-node cluster tolerates 1 failure. 5-node tolerates 2.<br><br>
+<strong>Prevention:</strong><ul>
+<li>Run <strong>odd number</strong> of etcd nodes (3 or 5)</li>
+<li>Spread across <strong>failure domains</strong> (AZs, racks)</li>
+<li>Monitor <strong>disk latency</strong> — etcd is very sensitive to slow disks (use SSDs)</li>
+<li>Monitor <strong>leader elections</strong> — frequent elections = instability</li>
+<li><strong>Regular backups</strong> with <code>etcdctl snapshot save</code></li>
+</ul>
+<strong>Recovery:</strong> Restore from backup with <code>etcdctl snapshot restore</code>. Any state changes after the snapshot are lost.`
+  },
+  {
+    id: "res-19",
+    category: "resiliency",
+    q: "How does the Horizontal Pod Autoscaler (HPA) work? What are the pitfalls?",
+    a: `HPA adjusts replica count based on metrics:<br><br>
+<code>desiredReplicas = ceil(currentReplicas × (currentMetric / targetMetric))</code><br><br>
+<strong>Default metric:</strong> CPU utilization. Can also use memory, custom metrics (requests/sec), or external metrics.<br><br>
+<strong>Pitfalls:</strong><ul>
+<li><strong>Must set resource requests</strong> — HPA compares usage to requests. No requests = HPA can't calculate.</li>
+<li><strong>Cooldown periods</strong> — scale up is fast (3min default), scale down is slow (5min) to prevent flapping</li>
+<li><strong>Don't use with VPA simultaneously</strong> on the same metric</li>
+<li><strong>JVM/startup time</strong> — if pods take 60s to warm up, HPA may over-scale during a spike</li>
+<li><strong>CPU isn't always the bottleneck</strong> — use custom metrics (queue depth, request latency) for better signals</li>
+</ul>`
+  },
+  {
+    id: "res-20",
+    category: "resiliency",
+    q: "What is chaos engineering? How would you introduce it?",
+    a: `<strong>Deliberately inject failures</strong> to find weaknesses before they cause outages in production.<br><br>
+<strong>Process:</strong><ol>
+<li>Define <strong>steady state</strong> — what does "normal" look like? (error rate, latency, throughput)</li>
+<li><strong>Hypothesize</strong> — "If we kill pod X, traffic should failover to healthy pods"</li>
+<li><strong>Inject failure</strong> — pod kill, network partition, latency injection, disk fill</li>
+<li><strong>Observe</strong> — did the system behave as expected?</li>
+<li><strong>Fix</strong> — address any weaknesses found</li>
+</ol>
+<strong>Tools:</strong> Chaos Monkey, Litmus Chaos, Gremlin, Chaos Mesh.<br><br>
+<strong>Introduce gradually:</strong> Start in staging. Start with simple experiments (kill a pod). Build confidence. Then run in production during business hours with the team watching.`
+  },
+  {
+    id: "res-21",
+    category: "resiliency",
+    q: "How do you run a blameless postmortem?",
+    a: `<strong>Within 48 hours</strong> of the incident:<br><br>
+<strong>Structure:</strong><ul>
+<li><strong>Timeline</strong> — what happened, when, who did what</li>
+<li><strong>Impact</strong> — users affected, duration, SLO burn</li>
+<li><strong>Root cause</strong> — not "who" but "what systemic issue allowed this"</li>
+<li><strong>What went well</strong> — detection, response, communication</li>
+<li><strong>What didn't go well</strong> — gaps in monitoring, slow detection, missing runbooks</li>
+<li><strong>Action items</strong> — concrete, assigned, with deadlines</li>
+</ul>
+<strong>Key principle:</strong> People don't cause incidents — systems allow them. Focus on making the system safer, not punishing individuals.<br><br>
+<strong>Action items should prevent recurrence</strong>, not just fix the symptom.`
+  },
+  {
+    id: "res-22",
+    category: "resiliency",
+    q: "What is toil and how do you reduce it?",
+    a: `<strong>Toil</strong> = manual, repetitive, automatable work that scales linearly with service growth and has no lasting value.<br><br>
+<strong>Examples:</strong> manual deployments, hand-editing configs, restarting pods, responding to pages that could be auto-remediated.<br><br>
+<strong>Google SRE target:</strong> Engineers should spend <strong>< 50% of time on toil</strong>. Rest on engineering work that reduces future toil.<br><br>
+<strong>Reduce by:</strong><ul>
+<li>Automate repetitive tasks (operators, scripts, GitOps)</li>
+<li>Self-healing systems (reconciliation loops, auto-restart)</li>
+<li>Self-service platforms (no tickets for common operations)</li>
+<li>Better abstractions (CRDs that hide complexity)</li>
+</ul>`
+  },
+  {
+    id: "res-23",
+    category: "resiliency",
+    q: "Explain node pressure eviction. What gets killed first?",
+    a: `When a node runs low on resources (memory, disk, PIDs), the <strong>kubelet</strong> starts evicting pods.<br><br>
+<strong>Eviction signals:</strong><ul>
+<li><code>memory.available</code> < 100Mi (default)</li>
+<li><code>nodefs.available</code> < 10%</li>
+<li><code>imagefs.available</code> < 15%</li>
+</ul>
+<strong>Eviction order:</strong><ol>
+<li>Pods exceeding their <strong>requests</strong> (using more than they asked for)</li>
+<li><strong>BestEffort</strong> pods (no requests/limits) — killed first</li>
+<li><strong>Burstable</strong> pods exceeding requests</li>
+<li><strong>Guaranteed</strong> pods — killed last (requests == limits)</li>
+</ol>
+Within the same QoS class, pods using the most resources relative to their requests are evicted first.<br><br>
+<strong>This is why setting resource requests matters</strong> — it determines your pod's survival priority.`
+  },
+  {
+    id: "res-24",
+    category: "resiliency",
+    q: "What are retry storms and how do you prevent them?",
+    a: `When a service is struggling, clients retry failed requests. If every client retries simultaneously, the failing service gets <strong>even more traffic</strong> and collapses further.<br><br>
+<strong>Prevention:</strong><ul>
+<li><strong>Exponential backoff</strong> — wait longer between each retry (1s, 2s, 4s, 8s...)</li>
+<li><strong>Jitter</strong> — add randomness so clients don't all retry at the same instant</li>
+<li><strong>Retry budgets</strong> — limit retries to a % of total requests (e.g., only retry 20% of calls)</li>
+<li><strong>Circuit breakers</strong> — stop sending requests entirely when failure rate is high</li>
+<li><strong>Limit retry depth</strong> — only retry at one layer, not at every hop in a microservice chain</li>
+</ul>
+<strong>Istio config:</strong> Set <code>retries.attempts</code> and <code>retries.retryOn</code> in VirtualService. Combine with DestinationRule outlier detection.`
+  },
+  {
+    id: "res-25",
+    category: "resiliency",
+    q: "How do you approach capacity planning for a K8s cluster?",
+    a: `<ol>
+<li><strong>Measure current usage</strong> — CPU, memory, pod count per node. Look at actual vs requested.</li>
+<li><strong>Track growth trends</strong> — requests/sec, storage, new services onboarding</li>
+<li><strong>Right-size workloads first</strong> — most clusters are over-requested. Use VPA recommendations to set accurate requests.</li>
+<li><strong>Plan for headroom</strong> — N+1 at minimum. Can you lose a node and still schedule everything?</li>
+<li><strong>Cluster autoscaler</strong> — scales nodes based on unschedulable pods. Set min/max bounds.</li>
+</ol>
+<strong>Watch for:</strong><ul>
+<li><strong>Resource fragmentation</strong> — nodes 70% allocated but no single pod can fit</li>
+<li><strong>IP exhaustion</strong> — pod CIDR range limits how many pods can run</li>
+<li><strong>etcd size</strong> — grows with CRDs and custom resources</li>
+</ul>`
+  },
+  {
+    id: "res-14",
+    category: "resiliency",
+    q: "What is Prometheus and how does it work?",
+    a: `<strong>Prometheus</strong> is an open-source <strong>metrics monitoring and alerting</strong> system, the de facto standard for Kubernetes observability.<br><br>
+<strong>How it works:</strong><ul>
+<li><strong>Pull-based</strong> — Prometheus <em>scrapes</em> HTTP endpoints (e.g. <code>/metrics</code>) on a schedule (default 15s)</li>
+<li><strong>Time-series DB</strong> — stores metrics as time-stamped values: <code>http_requests_total{method="GET", status="200"} 1234</code></li>
+<li><strong>PromQL</strong> — query language to slice/aggregate. E.g. <code>rate(http_requests_total[5m])</code> gives requests/sec over 5 minutes</li>
+<li><strong>Alertmanager</strong> — evaluates rules and routes alerts to Slack, PagerDuty, etc.</li>
+</ul><br>
+<strong>In Kubernetes:</strong> Prometheus discovers scrape targets automatically via <strong>ServiceMonitors</strong> (CRDs from the Prometheus Operator). Pair with <strong>Grafana</strong> for dashboards.<br><br>
+<strong>Metric types:</strong> Counter (only goes up), Gauge (goes up/down), Histogram (bucketed distributions), Summary (percentiles).`
   }
 ];
