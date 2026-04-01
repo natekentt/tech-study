@@ -1216,5 +1216,30 @@ Within the same QoS class, pods using the most resources relative to their reque
 </ul>
 <strong>Start with copilot</strong> (low risk, immediate value). <strong>Graduate to agents</strong> as trust builds. The copilot phase teaches you what workflows are worth automating.<br><br>
 <strong>For PlayStation:</strong> Copilot for day-to-day engineering → MCP tools for infrastructure queries → agents for incident triage and toil automation.`
+  },
+  {
+    id: "ai-12",
+    category: "ai",
+    q: "How would you build an internal MCP tool marketplace for an engineering org?",
+    a: `<strong>Problem:</strong> Teams build AI integrations in silos — duplicate effort, inconsistent quality, no discoverability. Engineers don't know what tools exist.<br><br>
+<strong>Architecture:</strong><ul>
+<li><strong>MCP Registry</strong> — internal service catalog (think npm for MCP servers). Each tool registered with name, description, input/output schema, owner team, auth requirements.</li>
+<li><strong>Hosting</strong> — MCP servers deployed as <strong>containerized services on K8s</strong> (just like any microservice). Each server gets a namespace, health checks, autoscaling. Use an internal MCP Gateway that routes tool calls to the right server.</li>
+<li><strong>Discovery</strong> — internal developer portal (Backstage plugin or custom UI) where engineers browse available tools, see docs, usage stats, and connect them to their Claude/Copilot setup.</li>
+<li><strong>Publishing</strong> — teams submit MCP servers via PR to a registry repo. CI validates schema, runs tests, checks security (no hardcoded creds, proper auth). Approved → auto-deployed.</li>
+</ul>
+<strong>Governance:</strong><ul>
+<li><strong>Auth</strong> — every tool enforces caller identity via OAuth/OIDC. No god-mode tokens.</li>
+<li><strong>Tiers</strong> — read-only tools auto-approved. Write tools require security review.</li>
+<li><strong>Usage tracking</strong> — per-tool call counts, latency, error rates, token cost. Helps prioritize investment and catch abuse.</li>
+<li><strong>Versioning</strong> — semver for tool schemas. Breaking changes require new version + migration period.</li>
+</ul>
+<strong>Examples of tools teams would publish:</strong><ul>
+<li>Platform team → <code>k8s-query</code>, <code>argocd-deploy</code>, <code>prometheus-query</code></li>
+<li>Security team → <code>trivy-scan</code>, <code>vault-secrets</code>, <code>rbac-audit</code></li>
+<li>Data team → <code>spark-query</code>, <code>pipeline-status</code></li>
+<li>Infra team → <code>terraform-plan</code>, <code>cost-estimate</code></li>
+</ul>
+<strong>Impact:</strong> Goes from "each team hacks their own AI scripts" to a governed, discoverable ecosystem. Same playbook as internal package registries (NuGet, PyPI) — just for AI tools.`
   }
 ];
