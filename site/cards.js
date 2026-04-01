@@ -1241,5 +1241,33 @@ Within the same QoS class, pods using the most resources relative to their reque
 <li>Infra team → <code>terraform-plan</code>, <code>cost-estimate</code></li>
 </ul>
 <strong>Impact:</strong> Goes from "each team hacks their own AI scripts" to a governed, discoverable ecosystem. Same playbook as internal package registries (NuGet, PyPI) — just for AI tools.`
+  },
+  {
+    id: "ai-13",
+    category: "ai",
+    q: "What are the production-grade AI tools and frameworks for SRE/platform workflows?",
+    a: `<strong>Agent Frameworks:</strong><ul>
+<li><strong>Claude Agent SDK</strong> — Anthropic's SDK for building agents with tool use, multi-step reasoning, and guardrails. Native MCP support.</li>
+<li><strong>LangGraph</strong> — stateful, multi-agent orchestration with cycles, branching, and human-in-the-loop. Good for complex incident workflows.</li>
+<li><strong>CrewAI</strong> — multi-agent framework where agents have roles (e.g., "incident commander," "log analyst"). Agents collaborate on tasks.</li>
+</ul>
+<strong>MCP Infrastructure:</strong><ul>
+<li><strong>MCP TypeScript/Python SDKs</strong> — official SDKs for building MCP servers. Handles transport, auth, schema validation.</li>
+<li><strong>Cloudflare MCP Gateway</strong> — hosted MCP server proxy with auth, rate limiting, and logging built in.</li>
+</ul>
+<strong>AI-Native Observability:</strong><ul>
+<li><strong>LangSmith</strong> — traces every LLM call, tool invocation, and agent step. Essential for debugging agent behavior in production.</li>
+<li><strong>Arize Phoenix</strong> — open-source LLM observability. Tracks hallucinations, latency, token usage, retrieval quality.</li>
+</ul>
+<strong>AI for K8s (purpose-built):</strong><ul>
+<li><strong>K8sGPT</strong> — scans cluster for issues and explains them in plain English. Integrates with Trivy, Prometheus.</li>
+<li><strong>Kubectl AI plugin</strong> — natural language → kubectl commands.</li>
+<li><strong>Robusta</strong> — AI-powered K8s troubleshooting. Auto-enriches alerts with pod logs, metrics, and suggested fixes.</li>
+</ul>
+<strong>Coding Assistants (enterprise):</strong><ul>
+<li><strong>Claude Code</strong> — agentic coding with MCP tool support, hooks, persistent memory. Can run in CI.</li>
+<li><strong>GitHub Copilot Enterprise</strong> — code completion + codebase-aware chat. Good for IaC and K8s manifests.</li>
+</ul>
+<strong>Stack recommendation:</strong> Claude Agent SDK or LangGraph for orchestration → MCP servers for tool access → LangSmith for observability → K8sGPT or Robusta for quick wins while building custom agents.`
   }
 ];
