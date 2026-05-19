@@ -2,7 +2,7 @@ const FLASHCARDS = [
   // ── K8s Architecture ──────────────────────────────────────────
   {
     id: "k8s-01",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What are the four control plane components and what does each do?",
     a: `<strong>API Server</strong> — front door; handles auth, RBAC, admission, persists to etcd. Only component that talks to etcd.<br><br>
 <strong>etcd</strong> — distributed key-value store; single source of truth for all cluster state. Uses Raft consensus.<br><br>
@@ -11,7 +11,7 @@ const FLASHCARDS = [
   },
   {
     id: "k8s-02",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "Walk through what happens when you run <code>kubectl apply -f deployment.yaml</code>.",
     a: `<ol>
 <li>kubectl sends HTTP POST/PUT to <strong>API Server</strong></li>
@@ -27,7 +27,7 @@ const FLASHCARDS = [
   },
   {
     id: "k8s-03",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "Explain the reconciliation loop. Why is it the most important pattern in Kubernetes?",
     a: `<strong>Watch desired state → Compare to actual state → Act → Repeat.</strong><br><br>
 Every controller follows this pattern. It makes Kubernetes <strong>self-healing</strong> and <strong>declarative</strong>. If a pod crashes, the controller notices the mismatch (want 3, have 2) and creates a new one.<br><br>
@@ -35,7 +35,7 @@ This is <strong>level-triggered</strong> (react to state) not edge-triggered (re
   },
   {
     id: "k8s-04",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What happens when a node goes down?",
     a: `The <strong>node controller</strong> detects the node is not reporting heartbeats. After a timeout (default ~5 min), it marks the node <code>NotReady</code>.<br><br>
 Pods on that node are <strong>evicted</strong> and rescheduled to healthy nodes by the scheduler (if managed by a Deployment/ReplicaSet).<br><br>
@@ -43,7 +43,7 @@ Standalone pods without a controller are lost.`
   },
   {
     id: "k8s-05",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What's the difference between a Deployment and a StatefulSet?",
     a: `<strong>Deployment</strong> — stateless workloads. Pods are interchangeable, no stable identity, uses ReplicaSets for rolling updates.<br><br>
 <strong>StatefulSet</strong> — stateful workloads. Each pod gets:<ul>
@@ -54,7 +54,7 @@ Standalone pods without a controller are lost.`
   },
   {
     id: "k8s-06",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What are the three node components and what does each do?",
     a: `<strong>kubelet</strong> — agent on every node. Receives pod specs from API server, ensures containers are running, runs probes, reports status back.<br><br>
 <strong>kube-proxy</strong> — maintains iptables/IPVS rules for Service → Pod routing. Enables the Service abstraction. Doesn't proxy traffic directly in modern mode.<br><br>
@@ -62,7 +62,7 @@ Standalone pods without a controller are lost.`
   },
   {
     id: "k8s-07",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "How does a Deployment rolling update work?",
     a: `<ol>
 <li>Deployment controller creates a <strong>new ReplicaSet</strong> with the new image</li>
@@ -74,7 +74,7 @@ Standalone pods without a controller are lost.`
   },
   {
     id: "k8s-08",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What is etcd and why is it critical?",
     a: `Distributed <strong>key-value store</strong> — the single source of truth for ALL cluster state (pods, services, secrets, CRDs, everything).<br><br>
 Uses <strong>Raft consensus</strong> for leader election and replication. Typically 3 or 5 nodes for quorum.<br><br>
@@ -83,7 +83,7 @@ Protect it: back up regularly, encrypt at rest, restrict network access, monitor
   },
   {
     id: "k8s-09",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What is a DaemonSet and when would you use one?",
     a: `Runs <strong>one pod per node</strong> (or per matching node).<br><br>
 Used for node-level agents:<ul>
@@ -95,7 +95,7 @@ Used for node-level agents:<ul>
   },
   {
     id: "k8s-10",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What is a Pod? Why is it ephemeral?",
     a: `Smallest deployable unit — <strong>one or more containers</strong> sharing network namespace and storage volumes.<br><br>
 Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
@@ -104,7 +104,7 @@ Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
 
   {
     id: "k8s-11",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What happens when a node runs out of disk space?",
     a: `The kubelet monitors disk via <strong>eviction thresholds</strong>:<ul>
 <li><code>nodefs.available</code> < 10% → soft eviction (grace period)</li>
@@ -117,7 +117,7 @@ Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
   },
   {
     id: "k8s-12",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What is the difference between resource requests and limits for CPU vs memory?",
     a: `<strong>CPU:</strong><ul>
 <li><strong>Request</strong> — guaranteed CPU time. Used by scheduler for placement.</li>
@@ -133,7 +133,7 @@ Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
   },
   {
     id: "k8s-13",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "How does kubectl exec work under the hood?",
     a: `<ol>
 <li><code>kubectl</code> sends request to <strong>API Server</strong></li>
@@ -146,7 +146,7 @@ Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
   },
   {
     id: "k8s-14",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What are taints and tolerations? When would you use them?",
     a: `<strong>Taints</strong> go on <strong>nodes</strong> — repel pods unless they tolerate the taint.<br>
 <strong>Tolerations</strong> go on <strong>pods</strong> — allow scheduling on tainted nodes.<br><br>
@@ -163,7 +163,7 @@ Each pod gets a unique cluster IP. Containers in a pod share localhost.<br><br>
   },
   {
     id: "k8s-15",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "A pod is stuck in Pending. What are the possible causes?",
     a: `Pending = scheduler can't place the pod. Check <code>kubectl describe pod</code> Events.<br><br>
 <strong>Common causes:</strong><ul>
@@ -274,7 +274,7 @@ Use <strong>owner references</strong> for GC and <strong>resource versions</stro
   // ── Systems Design ────────────────────────────────────────────
   {
     id: "sys-01",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "What is the 4-step framework for answering systems design questions?",
     a: `<ol>
 <li><strong>Clarify</strong> (2-3 min) — scale, constraints, priorities. Ask questions!</li>
@@ -286,7 +286,7 @@ Use <strong>owner references</strong> for GC and <strong>resource versions</stro
   },
   {
     id: "sys-02",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "Design a CI/CD platform — what are the key components?",
     a: `<ul>
 <li><strong>Pipeline CRD</strong> — developers define build/test/deploy declaratively</li>
@@ -300,7 +300,7 @@ Use <strong>owner references</strong> for GC and <strong>resource versions</stro
   },
   {
     id: "sys-03",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "How would you design a multi-tenant K8s platform for 200 teams?",
     a: `<strong>Namespace-based isolation with strong guardrails.</strong> Per-tenant setup:<br><br>
 <ul>
@@ -315,7 +315,7 @@ Escalate to vCluster or dedicated clusters only for strict compliance needs.`
   },
   {
     id: "sys-04",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "What does the Application CRD abstraction pattern look like?",
     a: `Developers interact with <strong>ONE resource</strong> (Application CRD). The controller creates 10+ underlying K8s resources:<br><br>
 <ul>
@@ -330,7 +330,7 @@ Escalate to vCluster or dedicated clusters only for strict compliance needs.`
   },
   {
     id: "sys-05",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "GitOps pattern — what is it and why use it?",
     a: `<strong>Source of truth = Git repository.</strong><br><br>
 Argo CD watches repos, detects drift, syncs to cluster.<br><br>
@@ -343,7 +343,7 @@ Argo CD watches repos, detects drift, syncs to cluster.<br><br>
   },
   {
     id: "sys-06",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "Cascading failure — walk through your incident response.",
     a: `<strong>Immediate (first 5 min):</strong> Check dashboards (blast radius), check recent deploys, roll back if recent deploy (GitOps = revert commit).<br><br>
 <strong>Diagnose (next 15 min):</strong> Traces (where in the chain?), metrics (resource usage, error rates), logs (filter by trace IDs).<br><br>
@@ -437,7 +437,7 @@ Start with <strong>lighthouse teams</strong> who are excited, get them successfu
   // ── Networking ────────────────────────────────────────────────
   {
     id: "net-01",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "What are the three Kubernetes networking rules?",
     a: `<ol>
 <li>Every pod gets its <strong>own IP address</strong> (no NAT between pods)</li>
@@ -448,14 +448,14 @@ The CNI plugin (Calico, Cilium, Flannel) makes this work by assigning IPs and se
   },
   {
     id: "net-02",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "How does a request flow from the internet to a pod?",
     a: `DNS → <strong>External Load Balancer</strong> → <strong>Ingress Controller</strong> (routes by host/path) → <strong>Service</strong> (ClusterIP) → <strong>kube-proxy rules</strong> (iptables/IPVS) → <strong>healthy Pod</strong>.<br><br>
 With a service mesh, requests additionally pass through the <strong>Envoy sidecar proxy</strong> for observability and policy enforcement.`
   },
   {
     id: "net-03",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "What are the four Service types?",
     a: `<strong>ClusterIP</strong> (default) — internal-only virtual IP. Service-to-service communication.<br><br>
 <strong>NodePort</strong> — static port on every node (30000-32767). Rarely used in production.<br><br>
@@ -464,7 +464,7 @@ With a service mesh, requests additionally pass through the <strong>Envoy sideca
   },
   {
     id: "net-04",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "Ingress vs Gateway API — what's the difference?",
     a: `<strong>Ingress</strong> — original L7 routing. Simple but limited: HTTP only, single resource for all config.<br><br>
 <strong>Gateway API</strong> — next-gen replacement:<ul>
@@ -476,7 +476,7 @@ Gateway API is the direction the ecosystem is moving.`
   },
   {
     id: "net-05",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "What are NetworkPolicies and when do you use them?",
     a: `Kubernetes-native <strong>firewall rules</strong>. By default, all pods can talk to all pods. NetworkPolicies restrict this.<br><br>
 <strong>Key rules:</strong><ul>
@@ -488,7 +488,7 @@ Use for: tenant isolation, restricting database access, defense-in-depth alongsi
   },
   {
     id: "net-06",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "What is a service mesh and how does the sidecar pattern work?",
     a: `A <strong>dedicated infrastructure layer</strong> for service-to-service communication. Handles traffic management, security (mTLS), and observability — <strong>without changing application code</strong>.<br><br>
 Every pod gets an <strong>Envoy sidecar proxy</strong> injected automatically. All traffic in/out goes through the proxy. It handles encryption, retries, circuit breaking, metrics.<br><br>
@@ -496,7 +496,7 @@ Your app just makes normal HTTP/gRPC calls.`
   },
   {
     id: "net-07",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "What are the key Istio resources?",
     a: `<strong>istiod</strong> — control plane (Pilot + Citadel + Galley). Configures proxies, manages certs, validates config.<br><br>
 <strong>VirtualService</strong> — routing rules (canary, traffic splitting, retries, timeouts).<br><br>
@@ -506,7 +506,7 @@ Your app just makes normal HTTP/gRPC calls.`
   },
   {
     id: "net-08",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "How would you implement canary deployments with a service mesh?",
     a: `<ol>
 <li>Deploy v2 alongside v1 with <strong>different labels</strong></li>
@@ -519,7 +519,7 @@ More controlled than K8s rolling updates — you control <strong>exact percentag
   },
   {
     id: "net-09",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "How does kube-proxy work?",
     a: `Runs on every node. Maintains <strong>iptables or IPVS rules</strong> that route Service traffic to healthy backend pods.<br><br>
 Watches the API server for Service and Endpoint changes, updates rules accordingly.<br><br>
@@ -527,7 +527,7 @@ In modern setups uses <strong>IPVS</strong> for better performance at scale. Doe
   },
   {
     id: "net-10",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "How does DNS work in Kubernetes?",
     a: `<strong>CoreDNS</strong> runs as a Deployment in the cluster.<br><br>
 Every Service gets a DNS entry: <code>&lt;service&gt;.&lt;namespace&gt;.svc.cluster.local</code><br><br>
@@ -537,7 +537,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
 
   {
     id: "net-11",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "How do you debug DNS issues in Kubernetes?",
     a: `<strong>Symptoms:</strong> Service discovery failing, connection timeouts, <code>Name or service not known</code> errors.<br><br>
 <strong>Debug steps:</strong><ol>
@@ -551,7 +551,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
   },
   {
     id: "net-12",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "What is the difference between L4 and L7 load balancing?",
     a: `<strong>L4 (Transport)</strong> — routes based on <strong>IP + port</strong>. Fast, simple, no payload inspection.<ul>
 <li>K8s Service (kube-proxy / IPVS)</li>
@@ -570,7 +570,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
   // ── Security ──────────────────────────────────────────────────
   {
     id: "sec-01",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "What are the seven layers of Kubernetes security?",
     a: `<ol>
 <li><strong>Cluster Security</strong> — API server hardening, etcd encryption</li>
@@ -584,7 +584,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
   },
   {
     id: "sec-02",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "Explain RBAC — the four resources and best practices.",
     a: `<strong>Role</strong> — permissions (verbs on resources) within a namespace.<br>
 <strong>ClusterRole</strong> — cluster-wide permissions.<br>
@@ -600,7 +600,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
   },
   {
     id: "sec-03",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "What are the most important pod security settings?",
     a: `<ol>
 <li><code>runAsNonRoot: true</code> — <strong>most important</strong>. Don't run as root.</li>
@@ -614,7 +614,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
   },
   {
     id: "sec-04",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "How do you manage secrets at scale?",
     a: `K8s Secrets are <strong>base64-encoded, NOT encrypted by default</strong>.<br><br>
 <strong>Production approach:</strong><ul>
@@ -629,7 +629,7 @@ Short form within the same namespace: just <code>&lt;service&gt;</code><br><br>
   },
   {
     id: "sec-05",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "What are the three Pod Security Standards (PSS) levels?",
     a: `Replaced PodSecurityPolicies. Applied via <strong>namespace labels</strong>:<br><br>
 <strong>Privileged</strong> — no restrictions. Only for system workloads.<br><br>
@@ -639,7 +639,7 @@ Modes: <code>enforce</code> (block), <code>warn</code> (allow + warn), <code>aud
   },
   {
     id: "sec-06",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "How do you implement least privilege in Kubernetes?",
     a: `Multiple layers:<br><br>
 <ol>
@@ -652,7 +652,7 @@ Modes: <code>enforce</code> (block), <code>warn</code> (allow + warn), <code>aud
   },
   {
     id: "sec-07",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "How do you prevent container breakout?",
     a: `<ul>
 <li>Run as <strong>non-root</strong></li>
@@ -668,7 +668,7 @@ Modes: <code>enforce</code> (block), <code>warn</code> (allow + warn), <code>aud
   },
   {
     id: "sec-08",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "What is mTLS and how does Istio implement it?",
     a: `<strong>Mutual TLS</strong> — both client and server authenticate each other and encrypt traffic.<br><br>
 Istio's Citadel component manages certificates. Each service gets a cert from Istio's CA.<br><br>
@@ -681,7 +681,7 @@ Rollout: start PERMISSIVE, validate all services work, migrate to STRICT namespa
 
   {
     id: "sec-09",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "What is supply chain security for containers? How do you implement it?",
     a: `Ensuring that the code you wrote is the code that's running — nothing tampered with in between.<br><br>
 <strong>Layers:</strong><ul>
@@ -696,7 +696,7 @@ Rollout: start PERMISSIVE, validate all services work, migrate to STRICT namespa
   },
   {
     id: "sec-10",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "How do you implement zero-trust networking in Kubernetes?",
     a: `<strong>Zero trust = never trust, always verify.</strong> Even traffic inside the cluster must be authenticated and authorized.<br><br>
 <strong>Implementation:</strong><ol>
@@ -712,7 +712,7 @@ Rollout: start PERMISSIVE, validate all services work, migrate to STRICT namespa
   // ── Resiliency / Observability ────────────────────────────────
   {
     id: "res-01",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What are the three types of probes and what does each do?",
     a: `<strong>Liveness</strong> — "Is the container stuck/deadlocked?" Failure → <strong>restart container</strong>.<br><br>
 <strong>Readiness</strong> — "Can it handle traffic right now?" Failure → <strong>remove from Service endpoints</strong> (no restart).<br><br>
@@ -721,7 +721,7 @@ Rollout: start PERMISSIVE, validate all services work, migrate to STRICT namespa
   },
   {
     id: "res-02",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is a Pod Disruption Budget (PDB)?",
     a: `Controls how many pods can be unavailable during <strong>voluntary disruptions</strong> (node drain, cluster upgrade, autoscaling down).<br><br>
 Set either:<ul>
@@ -732,7 +732,7 @@ Without PDBs, a drain could take <strong>all your pods down simultaneously</stro
   },
   {
     id: "res-03",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Explain resource requests vs limits and QoS classes.",
     a: `<strong>Requests</strong> — guaranteed minimum. Used by scheduler for placement.<br>
 <strong>Limits</strong> — ceiling. CPU is throttled; memory exceeding limit = OOMKilled.<br><br>
@@ -745,7 +745,7 @@ Best practice: always set both. Requests ≈ normal usage, Limits = reasonable c
   },
   {
     id: "res-04",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What are the three pillars of observability?",
     a: `<strong>Metrics</strong> (Prometheus + Grafana) — numerical measurements over time. <em>"What's happening?"</em><br><br>
 <strong>Logs</strong> (Loki / ELK) — detailed event records. <em>"Why is it happening?"</em><br><br>
@@ -754,7 +754,7 @@ Metrics tell you something is wrong, traces tell you where, logs tell you why.`
   },
   {
     id: "res-05",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What are SLI, SLO, SLA, and error budgets?",
     a: `<strong>SLI</strong> (Service Level Indicator) — the measurement. "99.2% of requests < 200ms"<br><br>
 <strong>SLO</strong> (Service Level Objective) — the target. "99.9% of requests should be < 200ms"<br><br>
@@ -763,7 +763,7 @@ Metrics tell you something is wrong, traces tell you where, logs tell you why.`
   },
   {
     id: "res-06",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "RED method vs USE method — when do you use each?",
     a: `<strong>RED Method</strong> (for services):<ul>
 <li><strong>R</strong>ate — requests per second</li>
@@ -778,7 +778,7 @@ Metrics tell you something is wrong, traces tell you where, logs tell you why.`
   },
   {
     id: "res-07",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "How do you ensure zero-downtime deployments?",
     a: `<ol>
 <li><strong>Rolling update</strong> with <code>maxUnavailable: 0</code> — keep all old pods until new ones are ready</li>
@@ -790,7 +790,7 @@ Metrics tell you something is wrong, traces tell you where, logs tell you why.`
   },
   {
     id: "res-08",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Your service returns 500 errors intermittently. How do you debug?",
     a: `<ol>
 <li><strong>Metrics</strong> — when did it start? Error rate? Correlated with deploys, traffic spikes?</li>
@@ -803,7 +803,7 @@ Metrics tell you something is wrong, traces tell you where, logs tell you why.`
   },
   {
     id: "res-09",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is circuit breaking and how does Istio implement it?",
     a: `Prevents <strong>cascading failures</strong> by stopping requests to unhealthy services.<br><br>
 Istio uses <strong>DestinationRule</strong> with outlier detection:<ul>
@@ -816,7 +816,7 @@ Also set <strong>connection pool limits</strong> and <strong>timeout/retry polic
   },
   {
     id: "res-10",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is the difference between monitoring and observability?",
     a: `<strong>Monitoring</strong> — tells you when <strong>known</strong> failure modes occur. Predefined alerts for expected scenarios.<br><br>
 <strong>Observability</strong> — lets you ask <strong>arbitrary questions</strong> about your system's behavior, even ones you didn't anticipate.<br><br>
@@ -825,7 +825,7 @@ Observability: <em>"Why is this specific user's request slow on Tuesdays?"</em>`
   },
   {
     id: "res-11",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Why should you alert on error budget burn rate, not raw metrics?",
     a: `<strong>Bad:</strong> Alert when CPU > 80% — noisy, doesn't mean users are affected.<br><br>
 <strong>Good:</strong> Alert when error budget burn rate is too high — directly tied to user impact and SLO.<br><br>
@@ -833,7 +833,7 @@ If SLO is 99.9% and you're burning budget 14.4x faster than normal, you'll exhau
   },
   {
     id: "res-12",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "How would you roll out Istio to 500 existing services?",
     a: `<strong>Never big-bang.</strong> Phased rollout:<br><br>
 <strong>Phase 1:</strong> Install control plane. Sidecar on ONE low-risk namespace. Validate latency/breakage.<br><br>
@@ -844,7 +844,7 @@ Always have an escape hatch.`
   },
   {
     id: "res-13",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is OpenTelemetry (OTel)?",
     a: `<strong>Vendor-neutral standard</strong> for metrics, logs, and traces.<br><br>
 <ul>
@@ -857,7 +857,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-15",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Walk through the pod termination lifecycle. Why does graceful shutdown matter?",
     a: `<ol>
 <li>Pod marked for deletion → <strong>removed from Service endpoints immediately</strong> (no new traffic)</li>
@@ -871,7 +871,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-16",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "A pod is OOMKilled. How do you diagnose and fix it?",
     a: `<strong>Diagnose:</strong><ul>
 <li><code>kubectl describe pod</code> → look for <code>OOMKilled</code> in last state, exit code 137</li>
@@ -888,7 +888,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-17",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Pod is stuck in CrashLoopBackOff. How do you debug it?",
     a: `CrashLoopBackOff = container starts, crashes, restarts with exponential backoff (10s, 20s, 40s… up to 5min).<br><br>
 <strong>Steps:</strong><ol>
@@ -903,7 +903,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-18",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What happens when etcd loses quorum? How do you prevent and recover?",
     a: `<strong>Impact:</strong> Cluster becomes <strong>read-only</strong>. No new pods, no updates, no scheduling. Existing workloads keep running but can't be modified.<br><br>
 <strong>Quorum:</strong> Requires majority of nodes. 3-node cluster tolerates 1 failure. 5-node tolerates 2.<br><br>
@@ -918,7 +918,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-19",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "How does the Horizontal Pod Autoscaler (HPA) work? What are the pitfalls?",
     a: `HPA adjusts replica count based on metrics:<br><br>
 <code>desiredReplicas = ceil(currentReplicas × (currentMetric / targetMetric))</code><br><br>
@@ -933,7 +933,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-20",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is chaos engineering? How would you introduce it?",
     a: `<strong>Deliberately inject failures</strong> to find weaknesses before they cause outages in production.<br><br>
 <strong>Process:</strong><ol>
@@ -948,7 +948,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-21",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "How do you run a blameless postmortem?",
     a: `<strong>Within 48 hours</strong> of the incident:<br><br>
 <strong>Structure:</strong><ul>
@@ -964,7 +964,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-22",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is toil and how do you reduce it?",
     a: `<strong>Toil</strong> = manual, repetitive, automatable work that scales linearly with service growth and has no lasting value.<br><br>
 <strong>Examples:</strong> manual deployments, hand-editing configs, restarting pods, responding to pages that could be auto-remediated.<br><br>
@@ -978,7 +978,7 @@ Service mesh bonus: Istio provides traces automatically for inter-service calls 
   },
   {
     id: "res-23",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Explain node pressure eviction. What gets killed first?",
     a: `When a node runs low on resources (memory, disk, PIDs), the <strong>kubelet</strong> starts evicting pods.<br><br>
 <strong>Eviction signals:</strong><ul>
@@ -997,7 +997,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "res-24",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What are retry storms and how do you prevent them?",
     a: `When a service is struggling, clients retry failed requests. If every client retries simultaneously, the failing service gets <strong>even more traffic</strong> and collapses further.<br><br>
 <strong>Prevention:</strong><ul>
@@ -1011,7 +1011,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "res-25",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "How do you approach capacity planning for a K8s cluster?",
     a: `<ol>
 <li><strong>Measure current usage</strong> — CPU, memory, pod count per node. Look at actual vs requested.</li>
@@ -1028,7 +1028,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "res-14",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is Prometheus and how does it work?",
     a: `<strong>Prometheus</strong> is an open-source <strong>metrics monitoring and alerting</strong> system, the de facto standard for Kubernetes observability.<br><br>
 <strong>How it works:</strong><ul>
@@ -1274,7 +1274,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   // ── Gap fillers — Systems Design ───────────────────────────
   {
     id: "sys-07",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "How would you design monitoring for a brand new service on Day 1?",
     a: `<strong>Before deploy:</strong><ul>
 <li><strong>ServiceMonitor</strong> CRD — Prometheus auto-discovers your <code>/metrics</code> endpoint</li>
@@ -1294,7 +1294,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "sys-08",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "How would you handle a cluster upgrade across hundreds of services?",
     a: `<strong>Never big-bang.</strong> Phased, tested, reversible:<br><br>
 <strong>Prep:</strong><ol>
@@ -1313,7 +1313,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "sys-09",
-    category: "systems",
+    category: "systems", tags: ["apple"],
     q: "Explain blue-green vs canary vs rolling deployments.",
     a: `<strong>Rolling (K8s default):</strong><ul>
 <li>Gradually replace old pods with new ones</li>
@@ -1337,7 +1337,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   // ── Gap fillers — K8s ──────────────────────────────────────
   {
     id: "k8s-16",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What is a Kubernetes Operator? How is it different from a controller?",
     a: `<strong>Controller</strong> — a reconciliation loop that watches resources and converges actual state to desired state. Built-in examples: Deployment controller, ReplicaSet controller.<br><br>
 <strong>Operator</strong> = CRD + custom controller. It extends Kubernetes with <strong>domain-specific knowledge</strong>. The controller knows how to manage a complex application (database, message queue, monitoring stack).<br><br>
@@ -1350,7 +1350,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "k8s-17",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "What are init containers and sidecar containers?",
     a: `<strong>Init containers</strong> — run <strong>before</strong> app containers start. Run to completion sequentially.<ul>
 <li>Wait for a dependency to be ready</li>
@@ -1367,7 +1367,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   },
   {
     id: "k8s-18",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "How does pod-to-pod communication work across nodes?",
     a: `Every pod gets a <strong>unique IP</strong> from the pod CIDR. The <strong>CNI plugin</strong> handles routing:<br><br>
 <strong>Same node:</strong> Traffic goes through the Linux bridge/veth pair. Fast, no encapsulation needed.<br><br>
@@ -1382,7 +1382,7 @@ Within the same QoS class, pods using the most resources relative to their reque
   // ── Gap fillers — Networking ───────────────────────────────
   {
     id: "net-13",
-    category: "networking",
+    category: "networking", tags: ["apple"],
     q: "How does Istio traffic management work for fault injection and testing?",
     a: `Istio can inject failures into live traffic for <strong>resilience testing</strong> without changing application code:<br><br>
 <strong>Delay injection:</strong><pre><code>apiVersion: networking.istio.io/v1beta1
@@ -1406,7 +1406,7 @@ spec:
   // ── Gap fillers — Security ─────────────────────────────────
   {
     id: "sec-11",
-    category: "security",
+    category: "security", tags: ["apple"],
     q: "What is OPA/Gatekeeper and how does it enforce policy in K8s?",
     a: `<strong>OPA</strong> (Open Policy Agent) — general-purpose policy engine. Policies written in <strong>Rego</strong> language.<br><br>
 <strong>Gatekeeper</strong> — K8s-native OPA integration using CRDs:<ul>
@@ -1427,7 +1427,7 @@ Runs as a <strong>validating admission webhook</strong>. Intercepts API requests
   // ── Gap fillers — Resiliency ───────────────────────────────
   {
     id: "res-26",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is Grafana and how does it fit the observability stack?",
     a: `<strong>Grafana</strong> is the <strong>visualization layer</strong> — dashboards and alerting for all your observability data.<br><br>
 <strong>Data sources:</strong><ul>
@@ -1446,7 +1446,7 @@ Runs as a <strong>validating admission webhook</strong>. Intercepts API requests
   },
   {
     id: "res-27",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "What is Loki and how is it different from ELK?",
     a: `<strong>Loki</strong> — log aggregation by Grafana Labs. The "Prometheus for logs."<br><br>
 <strong>Key difference from ELK:</strong> Loki does <strong>NOT</strong> index log content. It only indexes <strong>labels</strong> (namespace, pod, container). This makes it:<ul>
@@ -1464,7 +1464,7 @@ Runs as a <strong>validating admission webhook</strong>. Intercepts API requests
   },
   {
     id: "res-28",
-    category: "resiliency",
+    category: "resiliency", tags: ["apple"],
     q: "Walk through an on-call incident from page to resolution.",
     a: `<strong>0:00 — Page fires:</strong> Alertmanager sends PagerDuty alert: "checkout error budget burn rate 10x." Acknowledge immediately.<br><br>
 <strong>0:02 — Assess:</strong> Open Grafana RED dashboard for checkout. Error rate spiked from 0.1% to 8%. P99 latency 3x normal. Started 5 min ago.<br><br>
@@ -1476,7 +1476,7 @@ Runs as a <strong>validating admission webhook</strong>. Intercepts API requests
   },
   {
     id: "k8s-19",
-    category: "k8s",
+    category: "k8s", tags: ["apple"],
     q: "How do GPUs work in Kubernetes? When do you need them vs just CPU?",
     a: `<strong>When you need GPUs:</strong><ul>
 <li><strong>ML model training/inference</strong> — neural networks, LLMs, computer vision</li>
@@ -1492,5 +1492,1072 @@ Runs as a <strong>validating admission webhook</strong>. Intercepts API requests
 </ul>
 <strong>Scheduling:</strong> Use <strong>taints + tolerations</strong> to isolate GPU nodes — prevent non-GPU workloads from landing on expensive GPU nodes. Use <strong>node selectors</strong> or <strong>node affinity</strong> to target GPU node pools.<br><br>
 <strong>Cost consideration:</strong> GPU nodes are 5-10x more expensive than CPU nodes. Use <strong>cluster autoscaler</strong> to scale GPU node pools to zero when idle. Spot/preemptible instances for training workloads that can tolerate interruption.`
+  },
+
+  // ── Java / Spring ───────────────────────────────────────────────
+  {
+    id: "java-01",
+    category: "java", tags: ["apple"],
+    q: "Explain the JVM memory model. What lives in the heap vs the stack?",
+    a: `<strong>Heap</strong> — shared across all threads. Stores all <strong>object instances</strong> and arrays. Divided into:<ul>
+<li><strong>Young Gen</strong> (Eden + Survivor spaces) — short-lived objects</li>
+<li><strong>Old Gen (Tenured)</strong> — long-lived objects promoted from Young Gen</li>
+<li><strong>Metaspace</strong> (off-heap since Java 8) — class metadata, method bytecode</li>
+</ul>
+<strong>Stack</strong> — per-thread, stores <strong>frames</strong> for each method call: local variables, operand stack, return address. Primitives and object <em>references</em> live here (but not the objects themselves).<br><br>
+<strong>Key distinction:</strong> Heap is GC-managed and shared (thread-safety needed). Stack is thread-private, auto-cleaned on method return.`
+  },
+  {
+    id: "java-02",
+    category: "java", tags: ["apple"],
+    q: "Compare G1GC and ZGC. When would you choose each?",
+    a: `<strong>G1GC</strong> (default since Java 9):<ul>
+<li>Divides heap into <strong>regions</strong>, collects "garbage-first" (regions with most garbage)</li>
+<li>Pause target: <code>-XX:MaxGCPauseMillis=200</code> (default)</li>
+<li>Good balance of throughput and latency for <strong>4–16 GB heaps</strong></li>
+</ul>
+<strong>ZGC</strong> (production since Java 15):<ul>
+<li><strong>Sub-millisecond pauses</strong> regardless of heap size (up to multi-TB)</li>
+<li>Concurrent relocation using <strong>colored pointers</strong> + load barriers</li>
+<li>Best for <strong>large heaps</strong> and <strong>latency-sensitive</strong> services (payments, real-time APIs)</li>
+</ul>
+<strong>Choose G1</strong> for general-purpose workloads. <strong>Choose ZGC</strong> when tail latency matters (p99 SLOs) or heap exceeds 16 GB.`
+  },
+  {
+    id: "java-03",
+    category: "java", tags: ["apple"],
+    q: "What is Spring Boot auto-configuration and how does it work under the hood?",
+    a: `Spring Boot scans the classpath and <strong>automatically configures beans</strong> based on what libraries are present.<br><br>
+<strong>Mechanism:</strong><ol>
+<li><code>@SpringBootApplication</code> includes <code>@EnableAutoConfiguration</code></li>
+<li>Loads <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code></li>
+<li>Each auto-config class uses <strong>conditional annotations</strong>:<br>
+<code>@ConditionalOnClass</code>, <code>@ConditionalOnMissingBean</code>, <code>@ConditionalOnProperty</code></li>
+<li>Your explicit <code>@Bean</code> definitions always <strong>take precedence</strong></li>
+</ol>
+<strong>Example:</strong> If <code>spring-boot-starter-data-jpa</code> is on classpath and a DataSource bean exists, it auto-configures EntityManagerFactory, transaction manager, and Spring Data repositories.`
+  },
+  {
+    id: "java-04",
+    category: "java", tags: ["apple"],
+    q: "How does the <code>synchronized</code> keyword differ from <code>ReentrantLock</code>?",
+    a: `<strong><code>synchronized</code></strong> — intrinsic lock, simpler syntax:<ul>
+<li>Automatically released when block exits (even on exception)</li>
+<li>Cannot interrupt a thread waiting for the lock</li>
+<li>No fairness guarantee</li>
+</ul>
+<strong><code>ReentrantLock</code></strong> — explicit lock, more control:<ul>
+<li><code>tryLock(timeout)</code> — avoids indefinite blocking</li>
+<li><code>lockInterruptibly()</code> — can be interrupted while waiting</li>
+<li>Fairness policy option (FIFO ordering)</li>
+<li><strong>Must</strong> manually unlock in a <code>finally</code> block</li>
+<li>Supports multiple <code>Condition</code> objects (vs single wait/notify)</li>
+</ul>
+<strong>Rule of thumb:</strong> Use <code>synchronized</code> for simple cases. Use <code>ReentrantLock</code> when you need tryLock, fairness, or multiple conditions.`
+  },
+  {
+    id: "java-05",
+    category: "java", tags: ["apple"],
+    q: "Explain thread pool sizing. How do you configure <code>ThreadPoolExecutor</code> for CPU-bound vs I/O-bound work?",
+    a: `<strong>CPU-bound</strong> (compute-heavy, no waiting):<br>
+<code>threads = N_cpu + 1</code><br>
+Extra thread covers when one is context-switched out.<br><br>
+<strong>I/O-bound</strong> (network calls, DB queries, file I/O):<br>
+<code>threads = N_cpu × (1 + wait_time / compute_time)</code><br>
+Threads spend most time blocking, so you need more to keep CPUs busy.<br><br>
+<strong>ThreadPoolExecutor params:</strong><ul>
+<li><code>corePoolSize</code> — threads kept alive even when idle</li>
+<li><code>maximumPoolSize</code> — upper limit under load</li>
+<li><code>workQueue</code> — <code>LinkedBlockingQueue</code> (unbounded, risky) vs <code>ArrayBlockingQueue</code> (bounded, applies backpressure)</li>
+<li><code>rejectedExecutionHandler</code> — CallerRunsPolicy is often best (applies backpressure naturally)</li>
+</ul>
+<strong>Spring:</strong> Use <code>@Async</code> + custom <code>TaskExecutor</code> beans. Never use the default <code>SimpleAsyncTaskExecutor</code> in production (creates unbounded threads).`
+  },
+  {
+    id: "java-06",
+    category: "java", tags: ["apple"],
+    q: "What is the Spring Bean lifecycle? Walk through creation to destruction.",
+    a: `<ol>
+<li><strong>Instantiation</strong> — constructor called</li>
+<li><strong>Populate properties</strong> — dependency injection (<code>@Autowired</code>, <code>@Value</code>)</li>
+<li><strong>BeanNameAware / BeanFactoryAware</strong> — framework callbacks</li>
+<li><strong>BeanPostProcessor.postProcessBeforeInitialization</strong></li>
+<li><strong>@PostConstruct</strong> / <code>InitializingBean.afterPropertiesSet()</code></li>
+<li><strong>BeanPostProcessor.postProcessAfterInitialization</strong> — AOP proxies created here</li>
+<li><em>Bean is ready for use</em></li>
+<li><strong>@PreDestroy</strong> / <code>DisposableBean.destroy()</code> on shutdown</li>
+</ol>
+<strong>Key insight:</strong> Step 6 is where Spring creates <strong>AOP proxies</strong> (for <code>@Transactional</code>, <code>@Cacheable</code>, etc.). This is why self-invocation bypasses proxies — the internal call doesn't go through the proxy.`
+  },
+  {
+    id: "java-07",
+    category: "java", tags: ["apple"],
+    q: "What are virtual threads (Project Loom) and how do they change concurrency?",
+    a: `<strong>Virtual threads</strong> (Java 21+) are lightweight, JVM-managed threads that are <strong>not</strong> tied 1:1 to OS threads.<br><br>
+<strong>Key properties:</strong><ul>
+<li>Millions of virtual threads can run on a small pool of <strong>carrier (platform) threads</strong></li>
+<li>When a virtual thread blocks on I/O, it <strong>unmounts</strong> from its carrier — the carrier serves another virtual thread</li>
+<li>No need for reactive/async programming to achieve high concurrency</li>
+</ul>
+<strong>Impact on Spring:</strong><br>
+<code>spring.threads.virtual.enabled=true</code> — Tomcat uses virtual threads per request. Simple blocking code now scales like reactive code.<br><br>
+<strong>Caveats:</strong><ul>
+<li><code>synchronized</code> blocks <strong>pin</strong> the carrier thread — prefer <code>ReentrantLock</code></li>
+<li>Thread-local abuse can cause memory issues (millions of threads × large TLS)</li>
+<li>CPU-bound work doesn't benefit — still bounded by carrier thread count</li>
+</ul>`
+  },
+  {
+    id: "java-08",
+    category: "java", tags: ["apple"],
+    q: "Explain Spring dependency injection. What are the three injection types and which is preferred?",
+    a: `<strong>1. Constructor injection</strong> (preferred):<ul>
+<li>Dependencies are <strong>required</strong> and <strong>immutable</strong> (final fields)</li>
+<li>Object is always in a valid state after construction</li>
+<li>Easy to test — just pass dependencies to constructor</li>
+</ul>
+<strong>2. Setter injection:</strong><ul>
+<li>For <strong>optional</strong> dependencies</li>
+<li>Object can exist in partially initialized state</li>
+</ul>
+<strong>3. Field injection</strong> (<code>@Autowired</code> on fields):<ul>
+<li>Concise but <strong>discouraged</strong> — hides dependencies, hard to test, requires reflection</li>
+<li>Cannot make fields <code>final</code></li>
+</ul>
+<strong>Why constructor injection wins:</strong> Enforces required dependencies at compile time, supports immutability, makes circular dependencies obvious (fails fast), and works without Spring (plain Java).`
+  },
+  {
+    id: "java-09",
+    category: "java", tags: ["apple"],
+    q: "What is the Java Memory Model (JMM)? Explain <code>volatile</code> and happens-before.",
+    a: `The <strong>JMM</strong> defines how threads interact through memory and what behaviors are guaranteed.<br><br>
+<strong>Problem it solves:</strong> CPUs have caches. Without JMM rules, Thread A's write might not be visible to Thread B.<br><br>
+<strong><code>volatile</code></strong>:<ul>
+<li>Guarantees <strong>visibility</strong> — reads always see the latest write</li>
+<li>Prevents <strong>instruction reordering</strong> around volatile access</li>
+<li>Does NOT guarantee atomicity (e.g., <code>volatile int++</code> is still not atomic)</li>
+</ul>
+<strong>Happens-before</strong> relationships guarantee ordering:<ul>
+<li>Thread start → first action in started thread</li>
+<li>Unlock of monitor → subsequent lock of same monitor</li>
+<li>Write to volatile → subsequent read of same volatile</li>
+<li><code>final</code> field writes in constructor → any read of that field after construction</li>
+</ul>
+<strong>Practical tip:</strong> For atomic counters, use <code>AtomicInteger</code>/<code>LongAdder</code> instead of volatile.`
+  },
+  {
+    id: "java-10",
+    category: "java", tags: ["apple"],
+    q: "How does Spring Boot handle health checks and readiness/liveness probes?",
+    a: `<strong>Spring Boot Actuator</strong> provides health endpoints out of the box:<br><br>
+<strong>Liveness</strong> — <code>/actuator/health/liveness</code><ul>
+<li>Is the app process alive and not deadlocked?</li>
+<li>Returns 200 if the app is running, regardless of dependency health</li>
+<li>Failure → Kubernetes <strong>restarts</strong> the pod</li>
+</ul>
+<strong>Readiness</strong> — <code>/actuator/health/readiness</code><ul>
+<li>Can the app serve traffic right now?</li>
+<li>Checks DB connections, message brokers, downstream services</li>
+<li>Failure → Kubernetes removes pod from <strong>Service endpoints</strong> (no traffic routed)</li>
+</ul>
+<strong>Configuration:</strong><br>
+<code>management.endpoint.health.probes.enabled=true</code><br>
+<code>management.health.livenessState.enabled=true</code><br>
+<code>management.health.readinessState.enabled=true</code><br><br>
+<strong>Custom health indicators:</strong> Implement <code>HealthIndicator</code> interface. Contribute to readiness group via <code>management.endpoint.health.group.readiness.include</code>.`
+  },
+
+  // ── APIs at Scale ───────────────────────────────────────────────
+  {
+    id: "apis-01",
+    category: "apis", tags: ["apple"],
+    q: "Compare REST and gRPC. When would you choose each?",
+    a: `<strong>REST</strong>:<ul>
+<li>HTTP/1.1 or HTTP/2, JSON payloads (human-readable)</li>
+<li>Browser-friendly, massive ecosystem and tooling</li>
+<li>Best for <strong>public APIs</strong>, web clients, third-party integrations</li>
+</ul>
+<strong>gRPC</strong>:<ul>
+<li>HTTP/2 only, Protocol Buffers (binary, 3-10x smaller than JSON)</li>
+<li><strong>Bidirectional streaming</strong>, multiplexed connections</li>
+<li>Code generation from <code>.proto</code> files — strongly typed client/server stubs</li>
+<li>Best for <strong>internal service-to-service</strong> communication, low-latency, high-throughput</li>
+</ul>
+<strong>Hybrid pattern at scale:</strong> gRPC for internal microservices, REST (via API gateway with gRPC-JSON transcoding) for external clients.<br><br>
+<strong>Key tradeoff:</strong> gRPC is faster and more efficient, but harder to debug (binary), less browser support, and requires more tooling.`
+  },
+  {
+    id: "apis-02",
+    category: "apis", tags: ["apple"],
+    q: "What is Protocol Buffers (protobuf) and why is it preferred for service-to-service communication?",
+    a: `<strong>Protocol Buffers</strong> is Google's language-neutral binary serialization format.<br><br>
+<strong>Advantages over JSON:</strong><ul>
+<li><strong>3-10x smaller</strong> payload size (binary encoding, field tags instead of names)</li>
+<li><strong>20-100x faster</strong> serialization/deserialization</li>
+<li><strong>Schema-enforced</strong> — <code>.proto</code> files define the contract</li>
+<li><strong>Backward/forward compatible</strong> — field numbers never change, new fields are optional</li>
+</ul>
+<strong>Schema evolution rules:</strong><ul>
+<li>Never reuse a field number</li>
+<li>New fields must be optional or have defaults</li>
+<li>Use <code>reserved</code> to prevent accidental reuse of removed fields</li>
+</ul>
+<strong>Example:</strong><br>
+<code>message Payment { string id = 1; int64 amount_cents = 2; string currency = 3; }</code><br><br>
+<strong>When JSON is still better:</strong> Public APIs, browser clients, human debugging, small/simple payloads.`
+  },
+  {
+    id: "apis-03",
+    category: "apis", tags: ["apple"],
+    q: "How do you implement rate limiting at scale? Compare token bucket vs sliding window.",
+    a: `<strong>Token Bucket:</strong><ul>
+<li>Bucket holds up to <code>max_tokens</code>. Tokens added at steady rate. Each request costs 1 token.</li>
+<li><strong>Allows bursts</strong> up to bucket size, then throttles to refill rate</li>
+<li>Simple, memory-efficient, widely used (AWS API Gateway, Stripe)</li>
+</ul>
+<strong>Sliding Window Log:</strong><ul>
+<li>Store timestamp of each request. Count requests in last N seconds.</li>
+<li><strong>Precise</strong> but memory-heavy (stores every timestamp)</li>
+</ul>
+<strong>Sliding Window Counter</strong> (hybrid):<ul>
+<li>Combine current + previous window with weighted overlap</li>
+<li>Good precision, fixed memory (two counters per window)</li>
+</ul>
+<strong>At scale:</strong><ul>
+<li>Use <strong>Redis</strong> for distributed rate limiting (atomic INCR + EXPIRE)</li>
+<li>Return <code>429 Too Many Requests</code> with <code>Retry-After</code> header</li>
+<li>Include <code>X-RateLimit-Remaining</code> and <code>X-RateLimit-Reset</code> headers</li>
+<li>Apply at <strong>multiple layers</strong>: per-user, per-IP, per-API-key, global</li>
+</ul>`
+  },
+  {
+    id: "apis-04",
+    category: "apis", tags: ["apple"],
+    q: "What are the common pagination strategies? Compare offset, cursor, and keyset.",
+    a: `<strong>Offset-based</strong> (<code>?page=3&limit=20</code>):<ul>
+<li>Simple, supports jumping to arbitrary page</li>
+<li><strong>Problem:</strong> <code>OFFSET 10000</code> scans and discards 10K rows — O(n) performance</li>
+<li><strong>Problem:</strong> Insertions between pages cause duplicates or missed items</li>
+</ul>
+<strong>Cursor-based</strong> (<code>?cursor=eyJpZCI6MTIzfQ==</code>):<ul>
+<li>Opaque token encodes position. Client passes it to get next page.</li>
+<li><strong>Stable under concurrent writes</strong> — no duplicates or skips</li>
+<li>Cannot jump to arbitrary page</li>
+</ul>
+<strong>Keyset</strong> (<code>WHERE id > 123 ORDER BY id LIMIT 20</code>):<ul>
+<li>Cursor-based under the hood, uses indexed column for efficient seek</li>
+<li><strong>O(1) performance</strong> regardless of page depth (uses index seek, not scan)</li>
+<li>Best for large datasets — the approach used by Stripe, Slack, Twitter APIs</li>
+</ul>
+<strong>Best practice:</strong> Use cursor/keyset for production APIs. Reserve offset for admin dashboards or small datasets.`
+  },
+  {
+    id: "apis-05",
+    category: "apis", tags: ["apple"],
+    q: "How should APIs handle partial failures in a microservices architecture?",
+    a: `<strong>Core patterns:</strong><br><br>
+<strong>1. Circuit Breaker</strong> (Resilience4j, Hystrix):<ul>
+<li>Closed → Open (after N failures) → Half-Open (test with one request)</li>
+<li>Prevents cascading failures by <strong>failing fast</strong> instead of timing out</li>
+</ul>
+<strong>2. Bulkhead:</strong><ul>
+<li>Isolate resources per dependency (separate thread pools or semaphores)</li>
+<li>Slow service X can't exhaust threads needed for service Y</li>
+</ul>
+<strong>3. Retry with backoff:</strong><ul>
+<li>Exponential backoff + <strong>jitter</strong> to avoid thundering herd</li>
+<li>Only retry on <strong>transient</strong> failures (5xx, timeouts), not 4xx</li>
+</ul>
+<strong>4. Timeout budgets:</strong><ul>
+<li>Set per-call and total deadline. Propagate remaining budget downstream.</li>
+</ul>
+<strong>5. Graceful degradation:</strong><ul>
+<li>Return <strong>partial results</strong> with degradation headers</li>
+<li>Use cached/stale data when upstream is down</li>
+<li>Feature flags to disable non-critical paths</li>
+</ul>`
+  },
+  {
+    id: "apis-06",
+    category: "apis", tags: ["apple"],
+    q: "What is API versioning? Compare URL path, query param, and header strategies.",
+    a: `<strong>URL path</strong> (<code>/v1/payments</code>):<ul>
+<li>Most common, explicit, easy to route at load balancer</li>
+<li>Clear which version a client uses. Simple caching.</li>
+<li>Downside: URL changes break client bookmarks</li>
+</ul>
+<strong>Query parameter</strong> (<code>/payments?version=1</code>):<ul>
+<li>Optional — can default to latest</li>
+<li>Less clean, easy to forget</li>
+</ul>
+<strong>Header</strong> (<code>Accept: application/vnd.company.v1+json</code>):<ul>
+<li>Clean URLs, content negotiation</li>
+<li>Harder to test (can't share a URL), harder to cache</li>
+</ul>
+<strong>Best practices at scale:</strong><ul>
+<li>Use <strong>URL path versioning</strong> for simplicity and discoverability</li>
+<li>Maintain <strong>N-1 backward compatibility</strong> — support current + previous version</li>
+<li>Deprecation headers: <code>Sunset: Sat, 01 Jan 2028 00:00:00 GMT</code></li>
+<li>Version the API contract, not every endpoint change — use additive changes when possible</li>
+</ul>`
+  },
+  {
+    id: "apis-07",
+    category: "apis", tags: ["apple"],
+    q: "Explain gRPC streaming modes. When would you use each?",
+    a: `gRPC supports <strong>four communication patterns</strong>:<br><br>
+<strong>1. Unary</strong> — single request, single response (like REST):<br>
+Most common. Use for simple request/response like <code>GetPayment</code>.<br><br>
+<strong>2. Server streaming</strong> — client sends one request, server streams responses:<br>
+Use for <strong>large result sets</strong>, real-time feeds, log tailing.<br>
+Example: <code>ListTransactions</code> returns a stream of transactions.<br><br>
+<strong>3. Client streaming</strong> — client streams requests, server sends one response:<br>
+Use for <strong>bulk uploads</strong>, aggregation. Client sends events, server responds with summary.<br><br>
+<strong>4. Bidirectional streaming</strong> — both sides stream independently:<br>
+Use for <strong>real-time collaboration</strong>, chat, multiplayer game state.<br>
+Both sides read/write independently — order not guaranteed between streams.<br><br>
+<strong>Key advantage:</strong> All modes use a <strong>single HTTP/2 connection</strong> with multiplexed streams — no head-of-line blocking at the HTTP level.`
+  },
+  {
+    id: "apis-08",
+    category: "apis", tags: ["apple"],
+    q: "How do you design idempotent APIs? Why does it matter for payments?",
+    a: `<strong>Idempotency</strong> means calling an API multiple times produces the same result as calling it once.<br><br>
+<strong>Implementation pattern:</strong><ol>
+<li>Client sends <code>Idempotency-Key</code> header (UUID) with the request</li>
+<li>Server checks if key exists in idempotency store (Redis/DB)</li>
+<li>If exists → return the <strong>stored response</strong> (don't re-execute)</li>
+<li>If new → execute, store response keyed by idempotency key, return result</li>
+</ol>
+<strong>Why it's critical for payments:</strong><ul>
+<li>Network timeouts cause retries — without idempotency, customer gets <strong>double-charged</strong></li>
+<li>Mobile clients retry aggressively on flaky connections</li>
+<li>Load balancers retry on 502/503</li>
+</ul>
+<strong>Naturally idempotent:</strong> GET, PUT, DELETE (by definition)<br>
+<strong>Needs idempotency key:</strong> POST (creates resources)<br><br>
+<strong>Key expiry:</strong> Store idempotency keys for 24-48 hours. After that, same key can create a new resource.`
+  },
+  {
+    id: "apis-09",
+    category: "apis", tags: ["apple"],
+    q: "What is an API gateway? What responsibilities should it handle?",
+    a: `An <strong>API gateway</strong> is the single entry point for all client requests, routing them to appropriate backend services.<br><br>
+<strong>Core responsibilities:</strong><ul>
+<li><strong>Routing</strong> — direct requests to the correct service based on path/headers</li>
+<li><strong>Authentication</strong> — validate JWTs, API keys, OAuth tokens</li>
+<li><strong>Rate limiting</strong> — per-client, per-endpoint throttling</li>
+<li><strong>TLS termination</strong> — offload HTTPS from backend services</li>
+<li><strong>Request/response transformation</strong> — gRPC↔JSON transcoding</li>
+<li><strong>Load balancing</strong> — distribute across service instances</li>
+</ul>
+<strong>What it should NOT do:</strong><ul>
+<li>Business logic — belongs in services</li>
+<li>Data aggregation — use BFF (Backend for Frontend) pattern instead</li>
+</ul>
+<strong>Common options:</strong> Kong, AWS API Gateway, Envoy, NGINX, Spring Cloud Gateway<br><br>
+<strong>At Apple scale:</strong> API gateway handles millions of TPS. Must be stateless, horizontally scalable, and support canary routing for progressive rollouts.`
+  },
+  {
+    id: "apis-10",
+    category: "apis", tags: ["apple"],
+    q: "How do you handle API backward compatibility and breaking changes?",
+    a: `<strong>Non-breaking (additive) changes</strong> — safe to deploy:<ul>
+<li>Adding new optional fields to responses</li>
+<li>Adding new endpoints</li>
+<li>Adding new optional query parameters</li>
+<li>Adding new enum values (if clients handle unknown values)</li>
+</ul>
+<strong>Breaking changes</strong> — require versioning:<ul>
+<li>Removing or renaming fields</li>
+<li>Changing field types</li>
+<li>Changing URL structure</li>
+<li>Making optional fields required</li>
+</ul>
+<strong>Migration strategy:</strong><ol>
+<li><strong>Expand</strong> — add new field alongside old one</li>
+<li><strong>Migrate</strong> — move clients to new field (with deprecation warnings)</li>
+<li><strong>Contract</strong> — remove old field after migration period</li>
+</ol>
+<strong>Protobuf advantage:</strong> Field numbers provide natural backward compatibility. New fields with new numbers are ignored by old clients. Never reuse field numbers — use <code>reserved</code>.`
+  },
+
+  // ── AWS Cloud-Native ────────────────────────────────────────────
+  {
+    id: "aws-01",
+    category: "aws", tags: ["apple"],
+    q: "Compare Aurora, RDS, and DynamoDB. When would you choose each?",
+    a: `<strong>RDS</strong> (managed relational DB):<ul>
+<li>MySQL, PostgreSQL, SQL Server, etc. — familiar SQL interface</li>
+<li>Single-AZ or Multi-AZ (synchronous standby replica)</li>
+<li>Best for: <strong>traditional RDBMS workloads</strong> with moderate scale</li>
+</ul>
+<strong>Aurora</strong> (cloud-native relational):<ul>
+<li>MySQL/PostgreSQL compatible but <strong>5x throughput</strong> vs standard RDS</li>
+<li>Storage auto-scales to 128 TB, <strong>6-way replication</strong> across 3 AZs</li>
+<li><strong>Aurora Serverless v2</strong> — scales to zero, good for variable workloads</li>
+<li>Best for: <strong>high-throughput relational</strong> at scale</li>
+</ul>
+<strong>DynamoDB</strong> (managed NoSQL):<ul>
+<li>Key-value + document model, <strong>single-digit ms latency at any scale</strong></li>
+<li>Auto-scales read/write capacity. Global tables for multi-region.</li>
+<li>Best for: <strong>high-volume key-value lookups</strong>, session stores, event logs</li>
+</ul>
+<strong>Payments context:</strong> Aurora for transaction ledgers (ACID). DynamoDB for session tokens, idempotency keys.`
+  },
+  {
+    id: "aws-02",
+    category: "aws", tags: ["apple"],
+    q: "What is EKS and how does it differ from self-managed Kubernetes?",
+    a: `<strong>EKS (Elastic Kubernetes Service)</strong> — AWS-managed Kubernetes control plane.<br><br>
+<strong>What AWS manages:</strong><ul>
+<li>Control plane (API server, etcd, scheduler, controller manager)</li>
+<li>Automatic upgrades and patching of control plane</li>
+<li>Multi-AZ etcd with automated backups</li>
+<li>99.95% SLA for control plane</li>
+</ul>
+<strong>What you manage:</strong><ul>
+<li>Worker nodes (EC2, Fargate, or managed node groups)</li>
+<li>Networking (VPC CNI plugin, security groups)</li>
+<li>Application workloads and configs</li>
+</ul>
+<strong>EKS advantages over self-managed:</strong><ul>
+<li>No etcd operational burden (the hardest part of running K8s)</li>
+<li>IAM integration via <strong>IRSA</strong> (IAM Roles for Service Accounts)</li>
+<li>ALB Ingress Controller for native AWS load balancing</li>
+<li>Managed node groups with automatic AMI updates</li>
+</ul>
+<strong>EKS Fargate:</strong> Serverless pods — no nodes to manage at all. Good for batch jobs and variable workloads.`
+  },
+  {
+    id: "aws-03",
+    category: "aws", tags: ["apple"],
+    q: "Explain Multi-AZ vs Multi-Region. What are the tradeoffs?",
+    a: `<strong>Multi-AZ</strong> (within one region):<ul>
+<li>AZs are physically separate data centers, 1-2 ms latency between them</li>
+<li>Protects against <strong>single datacenter failure</strong></li>
+<li><strong>Synchronous</strong> replication feasible (low latency)</li>
+<li>Standard for all production workloads — relatively cheap and simple</li>
+</ul>
+<strong>Multi-Region</strong>:<ul>
+<li>Regions are geographically separated (50-200+ ms latency)</li>
+<li>Protects against <strong>entire region failure</strong> (rare but catastrophic)</li>
+<li>Typically <strong>asynchronous</strong> replication (eventual consistency)</li>
+<li>2-3x cost, significant operational complexity</li>
+</ul>
+<strong>When to go multi-region:</strong><ul>
+<li>Global user base needing low latency</li>
+<li>Regulatory requirements (data residency)</li>
+<li><strong>RPO near-zero</strong> for critical systems (payments, financial services)</li>
+</ul>
+<strong>Patterns:</strong> Active-passive (one region serves, other is standby) vs Active-active (both serve traffic — much harder, requires conflict resolution).`
+  },
+  {
+    id: "aws-04",
+    category: "aws", tags: ["apple"],
+    q: "What DR strategies does AWS support? Explain the four tiers.",
+    a: `From cheapest/slowest to most expensive/fastest:<br><br>
+<strong>1. Backup & Restore</strong> (RPO: hours, RTO: hours):<ul>
+<li>S3 cross-region backups, AMI copies, DB snapshots</li>
+<li>Cheapest — only pay for storage</li>
+</ul>
+<strong>2. Pilot Light</strong> (RPO: minutes, RTO: tens of minutes):<ul>
+<li>Core infrastructure running (DB replicas), but compute is off</li>
+<li>On disaster: scale up compute, switch DNS</li>
+</ul>
+<strong>3. Warm Standby</strong> (RPO: seconds, RTO: minutes):<ul>
+<li>Scaled-down but <strong>fully functional</strong> copy in DR region</li>
+<li>On disaster: scale up to production capacity, switch traffic</li>
+</ul>
+<strong>4. Multi-Site Active-Active</strong> (RPO: ~0, RTO: ~0):<ul>
+<li>Full production in both regions, traffic is split</li>
+<li>Most expensive but provides <strong>near-zero downtime</strong></li>
+<li>Requires data conflict resolution (DynamoDB Global Tables, Aurora Global Database)</li>
+</ul>
+<strong>For payments:</strong> Warm Standby minimum. Active-Active for critical transaction paths.`
+  },
+  {
+    id: "aws-05",
+    category: "aws", tags: ["apple"],
+    q: "What is IAM and how do you follow least-privilege in AWS?",
+    a: `<strong>IAM (Identity and Access Management)</strong> controls who can do what in AWS.<br><br>
+<strong>Core concepts:</strong><ul>
+<li><strong>Users</strong> — human identities (avoid long-lived access keys)</li>
+<li><strong>Roles</strong> — assumed by services, applications, or federated users</li>
+<li><strong>Policies</strong> — JSON documents defining Allow/Deny on resources</li>
+<li><strong>Groups</strong> — attach policies to groups, add users to groups</li>
+</ul>
+<strong>Least privilege principles:</strong><ul>
+<li>Start with <strong>zero permissions</strong>, add only what's needed</li>
+<li>Use <strong>IAM Access Analyzer</strong> to find unused permissions and generate least-privilege policies</li>
+<li><strong>Condition keys</strong> — restrict by IP, time, MFA, source VPC</li>
+<li><strong>Resource-level permissions</strong> — scope to specific ARNs, not <code>*</code></li>
+<li><strong>Service control policies (SCPs)</strong> — organization-wide guardrails</li>
+</ul>
+<strong>In EKS:</strong> Use <strong>IRSA</strong> (IAM Roles for Service Accounts) — each pod gets its own IAM role. No shared node-level credentials.`
+  },
+  {
+    id: "aws-06",
+    category: "aws", tags: ["apple"],
+    q: "How does DynamoDB work under the hood? Explain partitioning and capacity modes.",
+    a: `<strong>Architecture:</strong><ul>
+<li>Data is <strong>partitioned by hash of partition key</strong> across storage nodes</li>
+<li>Each partition handles up to <strong>3000 RCU / 1000 WCU / 10 GB</strong></li>
+<li>Partitions are automatically split when limits are reached</li>
+</ul>
+<strong>Key design:</strong><ul>
+<li><strong>Partition key</strong> — determines data placement. Must distribute evenly (avoid hot partitions)</li>
+<li><strong>Sort key</strong> — enables range queries within a partition</li>
+<li><strong>GSI (Global Secondary Index)</strong> — alternative partition + sort key, separate throughput</li>
+<li><strong>LSI (Local Secondary Index)</strong> — same partition key, different sort key</li>
+</ul>
+<strong>Capacity modes:</strong><ul>
+<li><strong>Provisioned</strong> — you set RCU/WCU. Use auto-scaling. Cheaper for predictable workloads.</li>
+<li><strong>On-Demand</strong> — auto-scales instantly, pay per request. Best for unpredictable or spiky traffic.</li>
+</ul>
+<strong>Anti-pattern:</strong> Using a low-cardinality partition key (e.g., <code>status</code>) creates hot partitions. Use composite keys or write sharding.`
+  },
+  {
+    id: "aws-07",
+    category: "aws", tags: ["apple"],
+    q: "What are VPCs, subnets, and security groups? How do they provide network isolation?",
+    a: `<strong>VPC (Virtual Private Cloud)</strong> — your isolated network in AWS. You define the IP range (CIDR block).<br><br>
+<strong>Subnets:</strong><ul>
+<li><strong>Public subnet</strong> — has route to Internet Gateway (IGW). For load balancers, bastion hosts.</li>
+<li><strong>Private subnet</strong> — no direct internet access. For app servers, databases. Uses NAT Gateway for outbound.</li>
+<li>Span a single AZ. Deploy across multiple AZs for HA.</li>
+</ul>
+<strong>Security Groups</strong> (stateful firewall):<ul>
+<li>Applied to <strong>ENIs</strong> (network interfaces on EC2, RDS, etc.)</li>
+<li><strong>Allow rules only</strong> — no explicit deny (default deny all inbound)</li>
+<li>Stateful — return traffic automatically allowed</li>
+<li>Can reference other security groups (e.g., "allow from web-sg")</li>
+</ul>
+<strong>NACLs</strong> (stateless, subnet-level):<ul>
+<li>Allow AND deny rules, evaluated in order</li>
+<li>Defense-in-depth layer on top of security groups</li>
+</ul>
+<strong>Best practice:</strong> Private subnets for all workloads. ALB in public subnet terminates traffic and forwards to private.`
+  },
+  {
+    id: "aws-08",
+    category: "aws", tags: ["apple"],
+    q: "How does Aurora Global Database work for multi-region?",
+    a: `<strong>Aurora Global Database</strong> spans multiple AWS regions with a single Aurora cluster.<br><br>
+<strong>Architecture:</strong><ul>
+<li><strong>Primary region</strong> — handles all writes</li>
+<li><strong>Secondary regions</strong> (up to 5) — read-only replicas with <strong>&lt;1 second replication lag</strong></li>
+<li>Replication is at the <strong>storage layer</strong> (not logical replication) — minimal impact on primary performance</li>
+</ul>
+<strong>Failover:</strong><ul>
+<li><strong>Managed planned failover</strong> — promotes secondary to primary with zero data loss (RPO = 0)</li>
+<li><strong>Unplanned failover</strong> — RPO typically &lt;1 second. RTO &lt;1 minute.</li>
+<li>Applications reconnect automatically via Global Database endpoints</li>
+</ul>
+<strong>Write forwarding:</strong> Secondary regions can forward writes to primary (adds latency but simplifies app logic).<br><br>
+<strong>Payments use case:</strong> Primary in us-east-1 for writes. Read replicas in eu-west-1 and ap-southeast-1 for global read performance. Failover for DR.`
+  },
+  {
+    id: "aws-09",
+    category: "aws", tags: ["apple"],
+    q: "What is AWS Lambda? When is serverless the right choice vs containers?",
+    a: `<strong>Lambda</strong> — event-driven, serverless compute. Upload code, AWS manages everything else.<br><br>
+<strong>Choose Lambda when:</strong><ul>
+<li>Event-driven workloads (S3 triggers, API Gateway, SQS, DynamoDB streams)</li>
+<li>Short-lived tasks (&lt;15 min timeout)</li>
+<li>Variable/spiky traffic (scale to zero, instant scale up)</li>
+<li>Glue logic between AWS services</li>
+</ul>
+<strong>Choose containers (EKS/ECS) when:</strong><ul>
+<li>Long-running processes or persistent connections</li>
+<li>Complex dependency trees or large runtimes</li>
+<li>Need GPU, high memory, or specific OS features</li>
+<li>Predictable high-throughput (containers are cheaper at sustained load)</li>
+</ul>
+<strong>Lambda gotchas:</strong><ul>
+<li><strong>Cold starts</strong> — first invocation is slow (mitigate with provisioned concurrency)</li>
+<li><strong>Concurrency limits</strong> — default 1000/region. Request increase for production.</li>
+<li><strong>Stateless</strong> — must use external state (DynamoDB, S3, ElastiCache)</li>
+</ul>
+<strong>For payments:</strong> Lambda for async events (notifications, webhooks). Containers for core transaction processing (predictable latency).`
+  },
+  {
+    id: "aws-10",
+    category: "aws", tags: ["apple"],
+    q: "How do you implement observability in AWS? What services form the stack?",
+    a: `<strong>AWS-native observability stack:</strong><br><br>
+<strong>Metrics — CloudWatch:</strong><ul>
+<li>Default metrics for all AWS services (CPU, network, errors)</li>
+<li>Custom metrics via <code>PutMetricData</code> API or CloudWatch agent</li>
+<li>CloudWatch Alarms → SNS → PagerDuty/Lambda for alerting</li>
+</ul>
+<strong>Logs — CloudWatch Logs:</strong><ul>
+<li>Log groups per service. Log Insights for SQL-like querying.</li>
+<li>Stream to S3/Elasticsearch for long-term analysis</li>
+<li>Structured JSON logging for efficient querying</li>
+</ul>
+<strong>Traces — AWS X-Ray:</strong><ul>
+<li>Distributed tracing across Lambda, API Gateway, EKS, etc.</li>
+<li>Service maps showing dependencies and latency bottlenecks</li>
+<li>Trace sampling to manage cost</li>
+</ul>
+<strong>Enhanced with open source:</strong><ul>
+<li><strong>Amazon Managed Prometheus (AMP)</strong> — for K8s metrics</li>
+<li><strong>Amazon Managed Grafana (AMG)</strong> — dashboards</li>
+<li><strong>OpenTelemetry (ADOT)</strong> — vendor-neutral instrumentation</li>
+</ul>
+<strong>Key principle:</strong> Instrument at service boundaries. Correlate metrics, logs, and traces with a shared <code>trace-id</code>.`
+  },
+
+  // ── Database Optimization ───────────────────────────────────────
+  {
+    id: "data-01",
+    category: "data", tags: ["apple"],
+    q: "Explain the CAP theorem. What tradeoff do real distributed databases make?",
+    a: `<strong>CAP Theorem:</strong> A distributed system can guarantee at most <strong>two of three</strong>:<ul>
+<li><strong>Consistency</strong> — every read returns the most recent write</li>
+<li><strong>Availability</strong> — every request receives a response</li>
+<li><strong>Partition tolerance</strong> — system works despite network splits</li>
+</ul>
+<strong>Reality:</strong> Network partitions <em>will</em> happen, so you must choose between C and A during a partition:<br><br>
+<strong>CP systems</strong> (choose consistency):<br>
+Refuse to respond if data might be stale. Examples: <strong>etcd, ZooKeeper, HBase, MongoDB (default)</strong><br><br>
+<strong>AP systems</strong> (choose availability):<br>
+Always respond, even with potentially stale data. Examples: <strong>Cassandra, DynamoDB, CouchDB</strong><br><br>
+<strong>Nuance:</strong> Most systems offer <strong>tunable consistency</strong>. DynamoDB offers eventual OR strong consistency per read. Cassandra lets you set quorum levels.<br><br>
+<strong>For payments:</strong> Financial transactions need <strong>CP</strong> (consistency). Use strong-read or transactions. Accept higher latency for correctness.`
+  },
+  {
+    id: "data-02",
+    category: "data", tags: ["apple"],
+    q: "What is database sharding? Compare horizontal partitioning strategies.",
+    a: `<strong>Sharding</strong> splits data across multiple database instances, each holding a subset of rows.<br><br>
+<strong>Strategies:</strong><br>
+<strong>1. Hash-based</strong> (<code>shard = hash(key) % N</code>):<ul>
+<li>Even distribution, simple routing</li>
+<li>Resharding is painful — adding a shard moves ~all data</li>
+<li>Fix: <strong>consistent hashing</strong> — only ~1/N keys move on add/remove</li>
+</ul>
+<strong>2. Range-based</strong> (e.g., A-M → shard1, N-Z → shard2):<ul>
+<li>Supports efficient range queries</li>
+<li>Risk of <strong>hot shards</strong> if data isn't uniformly distributed</li>
+</ul>
+<strong>3. Directory-based</strong> (lookup table maps key → shard):<ul>
+<li>Most flexible — arbitrary mapping</li>
+<li>Lookup table is a single point of failure and bottleneck</li>
+</ul>
+<strong>Challenges:</strong><ul>
+<li><strong>Cross-shard queries</strong> — expensive, require scatter-gather</li>
+<li><strong>Cross-shard transactions</strong> — require 2PC (two-phase commit)</li>
+<li><strong>Rebalancing</strong> — online resharding is hard (Vitess, ProxySQL)</li>
+</ul>
+<strong>Avoid sharding as long as possible.</strong> Vertical scaling, read replicas, and caching go a long way.`
+  },
+  {
+    id: "data-03",
+    category: "data", tags: ["apple"],
+    q: "How do database indexes work? When can they hurt performance?",
+    a: `<strong>Index = separate data structure</strong> that maps column values → row locations, enabling fast lookups.<br><br>
+<strong>B-tree index</strong> (default in PostgreSQL, MySQL):<ul>
+<li>Balanced tree, O(log n) lookups, supports range queries and ordering</li>
+<li>Best for: <strong>equality and range queries</strong> on high-cardinality columns</li>
+</ul>
+<strong>Hash index:</strong><ul>
+<li>O(1) lookups for exact match only. No range queries.</li>
+</ul>
+<strong>Composite index</strong> (<code>CREATE INDEX ON orders(user_id, created_at)</code>):<ul>
+<li>Follows <strong>leftmost prefix rule</strong> — index on (A, B, C) helps queries on A, A+B, A+B+C, but NOT B alone</li>
+</ul>
+<strong>When indexes hurt:</strong><ul>
+<li><strong>Write overhead</strong> — every INSERT/UPDATE must update all indexes on the table</li>
+<li><strong>Storage cost</strong> — indexes consume disk space</li>
+<li><strong>Low-cardinality columns</strong> (e.g., boolean) — full scan may be faster</li>
+<li><strong>Unused indexes</strong> — all write cost, no read benefit. Use <code>pg_stat_user_indexes</code> to find them.</li>
+</ul>
+<strong>Rule:</strong> Index columns that appear in WHERE, JOIN, and ORDER BY clauses of slow queries.`
+  },
+  {
+    id: "data-04",
+    category: "data", tags: ["apple"],
+    q: "Compare ACID and BASE. When do you choose each?",
+    a: `<strong>ACID</strong> (traditional relational DBs):<ul>
+<li><strong>Atomicity</strong> — transaction fully completes or fully rolls back</li>
+<li><strong>Consistency</strong> — data satisfies all constraints after transaction</li>
+<li><strong>Isolation</strong> — concurrent transactions don't interfere</li>
+<li><strong>Durability</strong> — committed data survives crashes</li>
+</ul>
+<strong>BASE</strong> (distributed NoSQL systems):<ul>
+<li><strong>Basically Available</strong> — system always responds</li>
+<li><strong>Soft state</strong> — data may be in flux</li>
+<li><strong>Eventually consistent</strong> — all replicas converge over time</li>
+</ul>
+<strong>Choose ACID when:</strong><ul>
+<li>Financial transactions, payment processing, inventory</li>
+<li>Data correctness is non-negotiable</li>
+<li>Need complex queries and joins</li>
+</ul>
+<strong>Choose BASE when:</strong><ul>
+<li>Social media feeds, analytics, session data</li>
+<li>Availability and partition tolerance matter more than immediate consistency</li>
+<li>Massive scale with simple access patterns</li>
+</ul>
+<strong>Hybrid approach:</strong> ACID for the payment ledger (Aurora), BASE for the activity feed (DynamoDB).`
+  },
+  {
+    id: "data-05",
+    category: "data", tags: ["apple"],
+    q: "What are database replication strategies? Compare sync vs async.",
+    a: `<strong>Synchronous replication:</strong><ul>
+<li>Primary waits for replica to confirm write before acknowledging client</li>
+<li><strong>Zero data loss</strong> (RPO = 0) — replica always has latest data</li>
+<li><strong>Higher latency</strong> — write takes as long as slowest replica</li>
+<li>Used by: Aurora (within region), PostgreSQL synchronous standby</li>
+</ul>
+<strong>Asynchronous replication:</strong><ul>
+<li>Primary acknowledges immediately, streams changes to replicas in background</li>
+<li><strong>Replication lag</strong> — replicas may be seconds behind</li>
+<li><strong>Lower latency</strong> on writes, but risk of data loss on primary failure</li>
+<li>Used by: MySQL default replication, Aurora cross-region</li>
+</ul>
+<strong>Semi-synchronous:</strong><ul>
+<li>Wait for <strong>at least one replica</strong> to confirm, not all</li>
+<li>Balance between durability and latency</li>
+</ul>
+<strong>Patterns:</strong><ul>
+<li><strong>Single-leader</strong> — one primary handles writes, replicas serve reads</li>
+<li><strong>Multi-leader</strong> — multiple primaries (complex conflict resolution)</li>
+<li><strong>Leaderless</strong> — any node accepts writes (Cassandra, DynamoDB)</li>
+</ul>
+<strong>Read-after-write consistency:</strong> Route a user's reads to the primary (or a sync replica) immediately after they write.`
+  },
+  {
+    id: "data-06",
+    category: "data", tags: ["apple"],
+    q: "What is query optimization? How do you read an EXPLAIN plan?",
+    a: `<strong>EXPLAIN</strong> shows the database's <strong>execution plan</strong> for a query — how it will access data.<br><br>
+<strong>Key things to look for:</strong><ul>
+<li><strong>Seq Scan</strong> (full table scan) — bad for large tables. Add an index.</li>
+<li><strong>Index Scan / Index Only Scan</strong> — good, using the index efficiently</li>
+<li><strong>Nested Loop</strong> — fine for small outer table, bad for large × large joins</li>
+<li><strong>Hash Join</strong> — good for large equi-joins with enough memory</li>
+<li><strong>Sort</strong> — check if an index can eliminate the sort</li>
+<li><strong>Rows</strong> — estimated vs actual (run <code>EXPLAIN ANALYZE</code>). Large discrepancy = stale statistics → run <code>ANALYZE</code></li>
+</ul>
+<strong>Common optimizations:</strong><ul>
+<li>Add covering indexes (include all columns the query needs)</li>
+<li>Rewrite <code>SELECT *</code> to select only needed columns</li>
+<li>Use <code>LIMIT</code> with keyset pagination instead of <code>OFFSET</code></li>
+<li>Avoid functions on indexed columns in WHERE (<code>WHERE YEAR(date)</code> → <code>WHERE date BETWEEN</code>)</li>
+<li>Partition large tables by date or tenant</li>
+</ul>`
+  },
+  {
+    id: "data-07",
+    category: "data", tags: ["apple"],
+    q: "Explain transaction isolation levels. What anomalies does each prevent?",
+    a: `From weakest to strongest:<br><br>
+<strong>Read Uncommitted:</strong><ul>
+<li>Can see uncommitted changes from other transactions (<strong>dirty reads</strong>)</li>
+<li>Rarely used in practice</li>
+</ul>
+<strong>Read Committed</strong> (PostgreSQL default):<ul>
+<li>Only sees committed data. Prevents dirty reads.</li>
+<li>Still allows <strong>non-repeatable reads</strong> (row changes between two reads in same tx)</li>
+</ul>
+<strong>Repeatable Read</strong> (MySQL InnoDB default):<ul>
+<li>Snapshot at transaction start. Same query returns same rows.</li>
+<li>Prevents non-repeatable reads. Still allows <strong>phantom reads</strong> in theory (new rows appear)</li>
+</ul>
+<strong>Serializable:</strong><ul>
+<li>Transactions execute as if serial. Prevents all anomalies.</li>
+<li>Highest correctness, <strong>lowest throughput</strong> (most locking/aborts)</li>
+</ul>
+<strong>Practical choice:</strong> Read Committed for most workloads. Serializable for financial calculations where correctness is paramount. Use <strong>optimistic concurrency control</strong> (version columns) to avoid heavy locking.`
+  },
+  {
+    id: "data-08",
+    category: "data", tags: ["apple"],
+    q: "What is connection pooling and why is it critical for database performance?",
+    a: `<strong>Problem:</strong> Database connections are expensive — each involves TCP handshake, TLS negotiation, authentication, and server-side memory allocation.<br><br>
+<strong>Connection pooling</strong> maintains a pool of pre-established connections that are reused across requests.<br><br>
+<strong>How it works:</strong><ol>
+<li>App requests a connection from the pool</li>
+<li>Pool returns an idle connection (or creates new one up to <code>maxPoolSize</code>)</li>
+<li>App uses connection, then returns it to the pool</li>
+<li>Connection stays open for reuse</li>
+</ol>
+<strong>Key settings:</strong><ul>
+<li><code>minimumIdle</code> — pre-warmed connections (avoid cold start)</li>
+<li><code>maximumPoolSize</code> — rule of thumb: <code>2 × CPU cores + disk spindles</code> (usually 10-20)</li>
+<li><code>connectionTimeout</code> — how long to wait for a connection before failing</li>
+<li><code>maxLifetime</code> — rotate connections to handle DNS changes and DB failovers</li>
+</ul>
+<strong>Tools:</strong> HikariCP (fastest for Java/Spring), PgBouncer (external for PostgreSQL), RDS Proxy (AWS-managed).<br><br>
+<strong>Anti-pattern:</strong> Opening a new connection per request. At 1000 RPS, that's 1000 concurrent DB connections — most DBs cap at a few hundred.`
+  },
+  {
+    id: "data-09",
+    category: "data", tags: ["apple"],
+    q: "What is database partitioning (table partitioning)? Compare horizontal vs vertical.",
+    a: `<strong>Table partitioning</strong> divides a single logical table into smaller physical pieces managed by the database.<br><br>
+<strong>Horizontal partitioning</strong> (most common):<ul>
+<li>Splits <strong>rows</strong> into partitions based on a column value</li>
+<li><strong>Range</strong>: by date (<code>orders_2024_q1</code>, <code>orders_2024_q2</code>) — best for time-series</li>
+<li><strong>List</strong>: by category (<code>region = 'US'</code>, <code>region = 'EU'</code>)</li>
+<li><strong>Hash</strong>: <code>hash(user_id) % N</code> — even distribution</li>
+</ul>
+<strong>Vertical partitioning:</strong><ul>
+<li>Splits <strong>columns</strong> into separate tables (e.g., separate BLOBs from frequently queried data)</li>
+<li>Reduces I/O for queries that only need a few columns</li>
+</ul>
+<strong>Benefits:</strong><ul>
+<li><strong>Partition pruning</strong> — queries only scan relevant partitions</li>
+<li>Efficient <strong>data lifecycle</strong> — drop old partitions instead of DELETE (instant, no vacuum)</li>
+<li>Parallel query execution across partitions</li>
+</ul>
+<strong>Key distinction from sharding:</strong> Partitioning is within a <strong>single database</strong>. Sharding is across <strong>multiple database instances</strong>.`
+  },
+  {
+    id: "data-10",
+    category: "data", tags: ["apple"],
+    q: "How do you handle schema migrations in production without downtime?",
+    a: `<strong>Online schema migration</strong> — change schema while serving traffic:<br><br>
+<strong>Expand-Contract pattern:</strong><ol>
+<li><strong>Expand</strong> — add new column/table (backward compatible). Deploy code that writes to both old and new.</li>
+<li><strong>Migrate</strong> — backfill existing data to new schema</li>
+<li><strong>Contract</strong> — remove old column/table after all code uses new schema</li>
+</ol>
+<strong>Safe operations</strong> (non-blocking in PostgreSQL):<ul>
+<li>ADD COLUMN with no default (or with DEFAULT in PG 11+)</li>
+<li>CREATE INDEX CONCURRENTLY</li>
+<li>ADD CONSTRAINT ... NOT VALID, then VALIDATE separately</li>
+</ul>
+<strong>Dangerous operations</strong> (lock the table):<ul>
+<li>Adding a column with a volatile default (pre-PG 11)</li>
+<li>RENAME COLUMN (breaks running queries)</li>
+<li>Changing column type (full table rewrite)</li>
+</ul>
+<strong>Tools:</strong> Flyway, Liquibase (migration versioning), gh-ost / pt-online-schema-change (MySQL), pgroll (PostgreSQL).<br><br>
+<strong>Rule:</strong> Every migration must be <strong>backward compatible</strong>. Old and new code must work simultaneously during rollout.`
+  },
+
+  // ── Payments & Commerce ─────────────────────────────────────────
+  {
+    id: "pay-01",
+    category: "payments", tags: ["apple"],
+    q: "Why is idempotency critical in payment systems? How do you implement it?",
+    a: `<strong>The problem:</strong> Network failures cause retries. Without idempotency, a payment request retried 3 times could charge the customer 3 times.<br><br>
+<strong>Implementation:</strong><ol>
+<li>Client generates a unique <code>Idempotency-Key</code> (UUID) before the first attempt</li>
+<li>Server stores: <code>key → {status, request_hash, response}</code> in a durable store</li>
+<li>On retry with same key:<ul>
+<li>If original is <strong>completed</strong> → return stored response</li>
+<li>If original is <strong>in-progress</strong> → return 409 Conflict (prevent concurrent execution)</li>
+<li>If request body differs → return 422 (key reuse with different request)</li>
+</ul></li>
+</ol>
+<strong>Storage:</strong> Use a separate <code>idempotency_keys</code> table with TTL (24-48h). DynamoDB is ideal (fast key-value lookup, TTL built-in).<br><br>
+<strong>Stripe's approach:</strong> Idempotency keys stored in ACID database alongside the payment record in the same transaction — guarantees atomicity between idempotency check and payment execution.`
+  },
+  {
+    id: "pay-02",
+    category: "payments", tags: ["apple"],
+    q: "What is the Saga pattern? How does it handle distributed transactions?",
+    a: `<strong>Problem:</strong> In microservices, a business transaction spans multiple services. Traditional distributed transactions (2PC) don't scale and create tight coupling.<br><br>
+<strong>Saga</strong> — a sequence of local transactions, each publishing an event that triggers the next step. If a step fails, <strong>compensating transactions</strong> undo previous steps.<br><br>
+<strong>Two coordination approaches:</strong><br><br>
+<strong>Choreography</strong> (event-driven):<ul>
+<li>Each service listens for events and acts independently</li>
+<li>Simple for 2-3 steps. Hard to debug with many steps (no central view)</li>
+</ul>
+<strong>Orchestration</strong> (central coordinator):<ul>
+<li>Orchestrator service directs the flow, tells each service what to do</li>
+<li>Easier to understand and debug. Single point of control.</li>
+<li>Preferred for <strong>payment flows</strong></li>
+</ul>
+<strong>Payment example:</strong><ol>
+<li>Reserve funds (Payment Service)</li>
+<li>Reserve inventory (Inventory Service)</li>
+<li>Create order (Order Service)</li>
+<li>If step 3 fails → compensate: release inventory, release funds</li>
+</ol>
+<strong>Key:</strong> Every step must have a compensating action. Design compensations to be idempotent.`
+  },
+  {
+    id: "pay-03",
+    category: "payments", tags: ["apple"],
+    q: "Explain event sourcing. Why is it used in financial systems?",
+    a: `<strong>Event sourcing</strong> stores every state change as an <strong>immutable event</strong> rather than overwriting current state.<br><br>
+<strong>Traditional:</strong> Account balance = $100 (overwrite on each transaction)<br>
+<strong>Event sourced:</strong><ol>
+<li>AccountCreated {balance: 0}</li>
+<li>FundsDeposited {amount: 200}</li>
+<li>PaymentProcessed {amount: -50}</li>
+<li>RefundIssued {amount: -50}</li>
+</ol>
+Current state = replay all events = $100<br><br>
+<strong>Why financial systems love it:</strong><ul>
+<li><strong>Complete audit trail</strong> — every change is recorded, nothing is lost</li>
+<li><strong>Temporal queries</strong> — "what was the balance at 3pm yesterday?"</li>
+<li><strong>Debugging</strong> — replay events to reproduce any past state</li>
+<li><strong>Regulatory compliance</strong> — immutable log satisfies audit requirements</li>
+</ul>
+<strong>Challenges:</strong><ul>
+<li><strong>Event schema evolution</strong> — old events must remain deserializable</li>
+<li><strong>Performance</strong> — replaying millions of events is slow. Use <strong>snapshots</strong> (periodic materialized state).</li>
+<li><strong>Eventual consistency</strong> — read models (projections) lag behind writes</li>
+</ul>`
+  },
+  {
+    id: "pay-04",
+    category: "payments", tags: ["apple"],
+    q: "How do you achieve exactly-once processing in a distributed payment system?",
+    a: `<strong>True exactly-once is impossible</strong> in distributed systems (proven by the Two Generals' Problem). Instead, we achieve <strong>effectively exactly-once</strong> through:<br><br>
+<strong>At-least-once delivery + idempotent processing = effectively exactly-once</strong><br><br>
+<strong>Pattern:</strong><ol>
+<li><strong>Producer</strong> retries on failure (at-least-once delivery)</li>
+<li><strong>Consumer</strong> deduplicates using a unique message ID:<ul>
+<li>Check if message ID exists in processed set</li>
+<li>If yes → skip (already processed)</li>
+<li>If no → process, then record message ID in same transaction as the business logic</li>
+</ul></li>
+</ol>
+<strong>Transactional outbox pattern:</strong><ul>
+<li>Write business data AND outbox event in <strong>same DB transaction</strong></li>
+<li>Separate process polls outbox and publishes to message broker</li>
+<li>Guarantees no lost events and no duplicate processing</li>
+</ul>
+<strong>Kafka:</strong> Supports exactly-once semantics (EOS) with idempotent producers + transactional consumers. Uses producer ID + sequence numbers for deduplication.`
+  },
+  {
+    id: "pay-05",
+    category: "payments", tags: ["apple"],
+    q: "What is PCI DSS and how does it affect system architecture?",
+    a: `<strong>PCI DSS (Payment Card Industry Data Security Standard)</strong> — mandatory compliance framework for any system that stores, processes, or transmits cardholder data.<br><br>
+<strong>Key requirements affecting architecture:</strong><ul>
+<li><strong>Network segmentation</strong> — isolate the Cardholder Data Environment (CDE) from other systems</li>
+<li><strong>Encryption</strong> — TLS for data in transit, AES-256 for data at rest. Never store CVV.</li>
+<li><strong>Tokenization</strong> — replace card numbers with tokens. Minimize PCI scope.</li>
+<li><strong>Access control</strong> — MFA, least privilege, unique IDs for all users</li>
+<li><strong>Logging & monitoring</strong> — audit trail for all access to cardholder data. 1-year retention.</li>
+<li><strong>Vulnerability management</strong> — regular patching, penetration testing, code reviews</li>
+</ul>
+<strong>Scope reduction strategy:</strong><ul>
+<li>Use a <strong>payment processor</strong> (Stripe, Adyen) to handle raw card data</li>
+<li>Client-side tokenization (Stripe.js, Apple Pay) — card numbers never touch your servers</li>
+<li>Only your payment microservice talks to the processor — isolate it in a separate VPC/namespace</li>
+</ul>
+<strong>Apple context:</strong> Apple Pay uses device-specific tokens and never exposes actual card numbers to merchants.`
+  },
+  {
+    id: "pay-06",
+    category: "payments", tags: ["apple"],
+    q: "Explain the payment processing lifecycle from card tap to merchant settlement.",
+    a: `<strong>The flow:</strong><ol>
+<li><strong>Authorization</strong> — Customer taps Apple Pay. Device sends payment token to merchant → acquirer → card network (Visa/Mastercard) → issuing bank. Bank checks funds, fraud, limits. Returns <strong>auth code</strong> or decline. (~1-2 seconds)</li>
+<li><strong>Capture</strong> — Merchant confirms the charge (can be immediate or delayed, e.g., at shipping). Tells acquirer to collect funds.</li>
+<li><strong>Clearing</strong> — Card network batches transactions and calculates net amounts between banks. Typically daily.</li>
+<li><strong>Settlement</strong> — Actual money movement between issuing bank → card network → acquiring bank → merchant. Takes <strong>1-3 business days</strong>.</li>
+</ol>
+<strong>Key parties:</strong><ul>
+<li><strong>Issuing bank</strong> — customer's bank (issues the card)</li>
+<li><strong>Acquiring bank</strong> — merchant's bank (receives payment)</li>
+<li><strong>Card network</strong> — Visa/Mastercard (routes and clears)</li>
+<li><strong>Payment processor</strong> — technical intermediary (Stripe, Adyen)</li>
+</ul>
+<strong>Refund:</strong> Reverses the flow. Can be a void (pre-settlement, instant) or refund (post-settlement, 5-10 days).`
+  },
+  {
+    id: "pay-07",
+    category: "payments", tags: ["apple"],
+    q: "What is the transactional outbox pattern? Why is it essential for payment events?",
+    a: `<strong>Problem:</strong> You need to update a database AND publish an event (e.g., "payment completed"). If either fails, your system is inconsistent:<ul>
+<li>DB succeeds, event publish fails → downstream never learns about payment</li>
+<li>Event published, DB fails → downstream processes a payment that didn't happen</li>
+</ul>
+<strong>Solution — Transactional Outbox:</strong><ol>
+<li>Write the business record AND an outbox event in the <strong>same database transaction</strong></li>
+<li>A separate <strong>relay process</strong> reads the outbox table and publishes events to the message broker</li>
+<li>After successful publish, mark the outbox record as sent</li>
+</ol>
+<strong>Implementation options:</strong><ul>
+<li><strong>Polling publisher</strong> — periodically query outbox for unsent events</li>
+<li><strong>CDC (Change Data Capture)</strong> — Debezium reads the DB transaction log and streams outbox events directly. More efficient, lower latency.</li>
+</ul>
+<strong>Why essential for payments:</strong><ul>
+<li>Guarantees <strong>atomicity</strong> between state change and event</li>
+<li>No dual-write problem — single source of truth</li>
+<li>Combined with idempotent consumers → <strong>exactly-once semantics</strong></li>
+</ul>`
+  },
+  {
+    id: "pay-08",
+    category: "payments", tags: ["apple"],
+    q: "How do you handle currency and money in code? What are common pitfalls?",
+    a: `<strong>Rule #1: NEVER use floating point for money.</strong><br>
+<code>0.1 + 0.2 = 0.30000000000000004</code> — IEEE 754 floats cannot represent most decimals exactly.<br><br>
+<strong>Best practices:</strong><ul>
+<li>Store amounts as <strong>integers in smallest currency unit</strong> (cents, pence): $19.99 → <code>1999</code></li>
+<li>Use <code>BigDecimal</code> in Java (with explicit scale and rounding mode)</li>
+<li>In databases: <code>DECIMAL(19,4)</code> or <code>BIGINT</code> (cents)</li>
+<li>Always store and transmit <strong>currency code</strong> alongside amount (ISO 4217: USD, EUR, JPY)</li>
+</ul>
+<strong>Currency-specific gotchas:</strong><ul>
+<li>Not all currencies have 2 decimal places — JPY has 0, BHD has 3</li>
+<li>Always use a currency library that knows this (Java Money API, Dinero.js)</li>
+</ul>
+<strong>Rounding:</strong><ul>
+<li>Use <strong>banker's rounding</strong> (round half to even) — prevents systematic bias</li>
+<li>Apply rounding at the <strong>last step</strong> only — intermediate calculations should preserve precision</li>
+</ul>
+<strong>Display:</strong> Use locale-aware formatters. $1,234.56 (US) vs 1.234,56 € (Germany).`
+  },
+  {
+    id: "pay-09",
+    category: "payments", tags: ["apple"],
+    q: "What is Apple Pay from a technical architecture perspective?",
+    a: `<strong>Apple Pay</strong> is a tokenized, device-level payment system.<br><br>
+<strong>How it works:</strong><ol>
+<li><strong>Provisioning</strong> — User adds card. Apple sends card details to card network. Network returns a <strong>Device Account Number (DAN)</strong> — a token stored in the <strong>Secure Element</strong> chip.</li>
+<li><strong>Transaction</strong> — User authenticates (Face ID/Touch ID). Secure Element generates a <strong>one-time cryptogram</strong> using the DAN + transaction details.</li>
+<li><strong>Payment</strong> — Merchant receives a payment token (DAN + cryptogram), NOT the real card number. Forwards to payment processor → card network decrypts and maps to real card → issuing bank authorizes.</li>
+</ol>
+<strong>Security architecture:</strong><ul>
+<li><strong>Secure Element</strong> — hardware-isolated chip. Keys never leave it.</li>
+<li><strong>Tokenization</strong> — real card number never stored on device or shared with merchant</li>
+<li><strong>Per-transaction cryptogram</strong> — replay attacks impossible</li>
+<li><strong>No card data on Apple servers</strong> — Apple doesn't know what you buy</li>
+</ul>
+<strong>For systems engineers:</strong> The backend must handle token-based payments, integrate with Apple's payment APIs, and support the token lifecycle (provisioning, updates, suspensions).`
+  },
+  {
+    id: "pay-10",
+    category: "payments", tags: ["apple"],
+    q: "How do you design a payment system for high availability and fault tolerance?",
+    a: `<strong>Core principles:</strong><br><br>
+<strong>1. Idempotency everywhere:</strong><ul>
+<li>Every payment operation must be safely retriable</li>
+<li>Unique payment IDs + idempotency keys at every layer</li>
+</ul>
+<strong>2. State machine for payment lifecycle:</strong><ul>
+<li>States: Created → Authorized → Captured → Settled (or Declined/Refunded/Disputed)</li>
+<li>Only valid transitions allowed. Persisted atomically.</li>
+<li>Enables recovery from any failure by resuming from current state</li>
+</ul>
+<strong>3. Async where possible:</strong><ul>
+<li>Auth is synchronous (customer is waiting). Settlement is async (batch).</li>
+<li>Use message queues for downstream processing (notifications, ledger updates, analytics)</li>
+</ul>
+<strong>4. Multi-region active-passive:</strong><ul>
+<li>Primary region handles all writes (payments need strong consistency)</li>
+<li>Warm standby in DR region. Failover in minutes.</li>
+</ul>
+<strong>5. Reconciliation:</strong><ul>
+<li>End-of-day reconciliation between your ledger and payment processor</li>
+<li>Automated alerts for mismatches. Manual review queue.</li>
+</ul>
+<strong>6. Circuit breakers per payment provider:</strong><ul>
+<li>If Visa is down, route to backup processor or queue for retry</li>
+</ul>`
   }
 ];

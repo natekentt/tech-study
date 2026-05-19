@@ -5,6 +5,7 @@
   var correct = 0;
   var wrong = 0;
   var currentCategory = "all";
+  var currentTag = null;
   var hideMastered = false;
 
   // ── DOM refs ───────────────────────────────────────────────────
@@ -106,13 +107,20 @@
     dx: "Platform DX",
     networking: "Networking",
     security: "Security",
-    resiliency: "Resiliency / Observability"
+    resiliency: "Resiliency / Observability",
+    ai: "AI for SRE",
+    java: "Java / Spring",
+    apis: "APIs at Scale",
+    aws: "AWS Cloud-Native",
+    data: "Database Optimization",
+    payments: "Payments & Commerce"
   };
 
   // ── URL state ─────────────────────────────────────────────────
   function updateURL() {
     var params = new URLSearchParams();
-    if (currentCategory !== "all") params.set("cat", currentCategory);
+    if (currentTag) params.set("tag", currentTag);
+    else if (currentCategory !== "all") params.set("cat", currentCategory);
     if (index > 0) params.set("card", index);
     if (hideMastered) params.set("hide", "1");
     var qs = params.toString();
@@ -123,8 +131,12 @@
   function readURL() {
     var params = new URLSearchParams(window.location.search);
     var cat = params.get("cat");
+    var tag = params.get("tag");
     var cardIdx = parseInt(params.get("card"), 10);
-    if (cat && CATEGORY_LABELS[cat]) {
+    if (tag) {
+      currentTag = tag;
+      currentCategory = "all";
+    } else if (cat && CATEGORY_LABELS[cat]) {
       currentCategory = cat;
     }
     if (params.get("hide") === "1") {
@@ -170,10 +182,16 @@
 
   function buildDeck() {
     var all = getAllCards();
-    deck =
-      currentCategory === "all"
-        ? all.slice()
-        : all.filter(function (c) { return c.category === currentCategory; });
+    if (currentTag) {
+      deck = all.filter(function (c) {
+        return c.tags && c.tags.indexOf(currentTag) !== -1;
+      });
+    } else {
+      deck =
+        currentCategory === "all"
+          ? all.slice()
+          : all.filter(function (c) { return c.category === currentCategory; });
+    }
     if (hideMastered) {
       deck = deck.filter(function (c) {
         return !getCardStats(c.id).mastered;
@@ -363,14 +381,31 @@
     render();
   });
 
-  // Filter buttons
-  document.querySelectorAll(".filter-btn").forEach(function (btn) {
+  // Filter buttons (category)
+  document.querySelectorAll(".filter-btn[data-category]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       document.querySelectorAll(".filter-btn").forEach(function (b) {
         b.classList.remove("active");
       });
       btn.classList.add("active");
       currentCategory = btn.dataset.category;
+      currentTag = null;
+      correct = 0;
+      wrong = 0;
+      buildDeck();
+      render();
+    });
+  });
+
+  // Filter buttons (tag)
+  document.querySelectorAll(".filter-btn[data-tag]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".filter-btn").forEach(function (b) {
+        b.classList.remove("active");
+      });
+      btn.classList.add("active");
+      currentTag = btn.dataset.tag;
+      currentCategory = "all";
       correct = 0;
       wrong = 0;
       buildDeck();
@@ -540,7 +575,12 @@
   var savedIndex = readURL();
 
   // Activate the correct filter button from URL
-  if (currentCategory !== "all") {
+  if (currentTag) {
+    document.querySelectorAll(".filter-btn").forEach(function (b) {
+      b.classList.remove("active");
+      if (b.dataset.tag === currentTag) b.classList.add("active");
+    });
+  } else if (currentCategory !== "all") {
     document.querySelectorAll(".filter-btn").forEach(function (b) {
       b.classList.remove("active");
       if (b.dataset.category === currentCategory) b.classList.add("active");
