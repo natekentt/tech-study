@@ -5,7 +5,7 @@
   var correct = 0;
   var wrong = 0;
   var currentCategory = "all";
-  var currentTag = null;
+  var appleOnly = false;
   var hideMastered = false;
 
   // ── DOM refs ───────────────────────────────────────────────────
@@ -119,8 +119,8 @@
   // ── URL state ─────────────────────────────────────────────────
   function updateURL() {
     var params = new URLSearchParams();
-    if (currentTag) params.set("tag", currentTag);
-    else if (currentCategory !== "all") params.set("cat", currentCategory);
+    if (currentCategory !== "all") params.set("cat", currentCategory);
+    if (appleOnly) params.set("apple", "1");
     if (index > 0) params.set("card", index);
     if (hideMastered) params.set("hide", "1");
     var qs = params.toString();
@@ -131,13 +131,12 @@
   function readURL() {
     var params = new URLSearchParams(window.location.search);
     var cat = params.get("cat");
-    var tag = params.get("tag");
     var cardIdx = parseInt(params.get("card"), 10);
-    if (tag) {
-      currentTag = tag;
-      currentCategory = "all";
-    } else if (cat && CATEGORY_LABELS[cat]) {
+    if (cat && CATEGORY_LABELS[cat]) {
       currentCategory = cat;
+    }
+    if (params.get("apple") === "1") {
+      appleOnly = true;
     }
     if (params.get("hide") === "1") {
       hideMastered = true;
@@ -182,15 +181,14 @@
 
   function buildDeck() {
     var all = getAllCards();
-    if (currentTag) {
-      deck = all.filter(function (c) {
-        return c.tags && c.tags.indexOf(currentTag) !== -1;
+    deck =
+      currentCategory === "all"
+        ? all.slice()
+        : all.filter(function (c) { return c.category === currentCategory; });
+    if (appleOnly) {
+      deck = deck.filter(function (c) {
+        return c.tags && c.tags.indexOf("apple") !== -1;
       });
-    } else {
-      deck =
-        currentCategory === "all"
-          ? all.slice()
-          : all.filter(function (c) { return c.category === currentCategory; });
     }
     if (hideMastered) {
       deck = deck.filter(function (c) {
@@ -389,7 +387,6 @@
       });
       btn.classList.add("active");
       currentCategory = btn.dataset.category;
-      currentTag = null;
       correct = 0;
       wrong = 0;
       buildDeck();
@@ -397,20 +394,14 @@
     });
   });
 
-  // Filter buttons (tag)
-  document.querySelectorAll(".filter-btn[data-tag]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".filter-btn").forEach(function (b) {
-        b.classList.remove("active");
-      });
-      btn.classList.add("active");
-      currentTag = btn.dataset.tag;
-      currentCategory = "all";
-      correct = 0;
-      wrong = 0;
-      buildDeck();
-      render();
-    });
+  // Apple WPC toggle
+  var btnAppleOnly = document.getElementById("btn-apple-only");
+  btnAppleOnly.addEventListener("click", function () {
+    appleOnly = !appleOnly;
+    btnAppleOnly.classList.toggle("active", appleOnly);
+    buildDeck();
+    if (index >= deck.length) index = Math.max(0, deck.length - 1);
+    render();
   });
 
   // Notes events — stopPropagation prevents card flip
@@ -575,21 +566,19 @@
   var savedIndex = readURL();
 
   // Activate the correct filter button from URL
-  if (currentTag) {
-    document.querySelectorAll(".filter-btn").forEach(function (b) {
-      b.classList.remove("active");
-      if (b.dataset.tag === currentTag) b.classList.add("active");
-    });
-  } else if (currentCategory !== "all") {
+  if (currentCategory !== "all") {
     document.querySelectorAll(".filter-btn").forEach(function (b) {
       b.classList.remove("active");
       if (b.dataset.category === currentCategory) b.classList.add("active");
     });
   }
 
-  // Activate hide-mastered button from URL
+  // Activate toggle buttons from URL
   if (hideMastered) {
     btnHideMastered.classList.add("active");
+  }
+  if (appleOnly) {
+    btnAppleOnly.classList.add("active");
   }
 
   buildDeck();
