@@ -2559,5 +2559,577 @@ Current state = replay all events = $100<br><br>
 <strong>6. Circuit breakers per payment provider:</strong><ul>
 <li>If Visa is down, route to backup processor or queue for retry</li>
 </ul>`
+  },
+
+  // ── Kafka & Messaging ──────────────────────────────────────────
+  {
+    id: "kafka-01",
+    category: "kafka", tags: ["apple"],
+    q: "How does Kafka work? Explain topics, partitions, and consumer groups.",
+    a: `<strong>Topic</strong> — a named log/feed of messages. Like a database table for events.<br><br>
+<strong>Partitions</strong> — each topic is split into ordered, append-only logs:<ul>
+<li>Messages within a partition have a sequential <strong>offset</strong></li>
+<li>Ordering guaranteed <strong>within a partition</strong>, not across partitions</li>
+<li>Partition key determines which partition a message goes to (<code>hash(key) % N</code>)</li>
+<li>More partitions = more parallelism</li>
+</ul>
+<strong>Consumer Groups:</strong><ul>
+<li>Each partition is consumed by <strong>exactly one consumer</strong> in a group</li>
+<li>Adding consumers (up to partition count) increases throughput</li>
+<li>Multiple consumer groups can read the same topic independently</li>
+<li>Offsets tracked per consumer group — each group has its own position</li>
+</ul>
+<strong>Brokers:</strong> Kafka servers that store partitions. Partitions are replicated across brokers for durability. One broker is <strong>leader</strong> for each partition, others are followers.`
+  },
+  {
+    id: "kafka-02",
+    category: "kafka", tags: ["apple"],
+    q: "How does Kafka guarantee message ordering and exactly-once delivery?",
+    a: `<strong>Ordering:</strong><ul>
+<li>Guaranteed <strong>within a partition only</strong></li>
+<li>Use the same partition key for messages that must be ordered (e.g., all events for user-123 go to the same partition)</li>
+<li>Global ordering requires a single partition — kills parallelism, rarely needed</li>
+</ul>
+<strong>Exactly-once semantics (EOS):</strong><br>
+<strong>Idempotent producer</strong> (<code>enable.idempotence=true</code>):<ul>
+<li>Each producer gets a <strong>Producer ID + sequence number</strong></li>
+<li>Broker deduplicates retried messages — no duplicates even on network failures</li>
+</ul>
+<strong>Transactional producer + consumer:</strong><ul>
+<li><code>beginTransaction()</code> → produce messages + commit offsets → <code>commitTransaction()</code></li>
+<li>Atomic: either all messages are published AND offsets committed, or none</li>
+<li>Consumers set <code>isolation.level=read_committed</code> to only see committed messages</li>
+</ul>
+<strong>End-to-end:</strong> Idempotent producer (no dups on write) + transactional consumer (atomic read-process-write) = effectively exactly-once.`
+  },
+  {
+    id: "kafka-03",
+    category: "kafka", tags: ["apple"],
+    q: "Compare Kafka vs SQS vs SNS. When would you choose each?",
+    a: `<strong>Kafka:</strong><ul>
+<li>Distributed log — messages <strong>retained</strong> (days/weeks), replayable</li>
+<li>Multiple consumer groups read independently (fan-out built in)</li>
+<li>Ordering within partitions. High throughput (millions msg/sec).</li>
+<li>Best for: <strong>event streaming, event sourcing, high-throughput pipelines</strong></li>
+</ul>
+<strong>SQS (Simple Queue Service):</strong><ul>
+<li>Managed queue — messages <strong>deleted after processing</strong></li>
+<li>Standard (at-least-once, best-effort order) vs FIFO (exactly-once, strict order)</li>
+<li>Dead letter queue built in. Auto-scales infinitely.</li>
+<li>Best for: <strong>task queues, decoupling services, job processing</strong></li>
+</ul>
+<strong>SNS (Simple Notification Service):</strong><ul>
+<li>Pub/sub — pushes messages to <strong>multiple subscribers</strong> (SQS, Lambda, HTTP, email)</li>
+<li>No persistence — if subscriber is down, message is lost (unless backed by SQS)</li>
+<li>Best for: <strong>fan-out notifications, event broadcasting</strong></li>
+</ul>
+<strong>Common pattern:</strong> SNS → SQS fan-out (each consumer gets its own queue). Use Kafka when you need replay, ordering, or stream processing.`
+  },
+  {
+    id: "kafka-04",
+    category: "kafka", tags: ["apple"],
+    q: "What are dead letter queues (DLQ) and how do you handle poison messages?",
+    a: `<strong>Problem:</strong> A malformed or unprocessable message causes the consumer to crash or retry infinitely, blocking the entire partition.<br><br>
+<strong>Dead Letter Queue:</strong> After N failed processing attempts, move the message to a separate DLQ topic/queue for investigation.<br><br>
+<strong>Implementation in Kafka:</strong><ol>
+<li>Consumer wraps processing in try/catch</li>
+<li>Track retry count per message (in headers or external store)</li>
+<li>After max retries → produce to <code>topic.DLQ</code></li>
+<li>Commit offset and move on — don't block healthy messages</li>
+</ol>
+<strong>In SQS:</strong> Built-in — configure <code>maxReceiveCount</code> and a DLQ. After N failures, SQS moves it automatically.<br><br>
+<strong>DLQ best practices:</strong><ul>
+<li>Alert on DLQ depth — messages there need human attention</li>
+<li>Include original topic, partition, offset, error reason in DLQ message</li>
+<li>Build a <strong>replay tool</strong> — fix the bug, then replay DLQ messages back to the original topic</li>
+<li>Set retention on DLQ (don't let it grow forever)</li>
+</ul>`
+  },
+  {
+    id: "kafka-05",
+    category: "kafka", tags: ["apple"],
+    q: "What is consumer lag and how do you monitor Kafka health?",
+    a: `<strong>Consumer lag</strong> = difference between the latest produced offset and the consumer's committed offset. It tells you <strong>how far behind</strong> your consumer is.<br><br>
+<strong>Why it matters:</strong><ul>
+<li>Growing lag = consumer can't keep up with production rate</li>
+<li>Causes stale data, delayed notifications, missed SLOs</li>
+</ul>
+<strong>Key metrics to monitor:</strong><ul>
+<li><strong>Consumer lag per partition</strong> — the #1 Kafka metric</li>
+<li><strong>Under-replicated partitions</strong> — broker health issue</li>
+<li><strong>Request latency</strong> (produce/fetch) — broker performance</li>
+<li><strong>ISR (In-Sync Replicas) shrinks</strong> — follower falling behind leader</li>
+<li><strong>Consumer group rebalances</strong> — frequency and duration</li>
+</ul>
+<strong>Fixing high lag:</strong><ul>
+<li>Add more consumers (up to partition count)</li>
+<li>Increase partitions (requires rebalance)</li>
+<li>Optimize consumer processing time</li>
+<li>Batch processing instead of one-at-a-time</li>
+</ul>
+<strong>Tools:</strong> Burrow, Kafka Lag Exporter (Prometheus), Confluent Control Center, Datadog Kafka integration.`
+  },
+  {
+    id: "kafka-06",
+    category: "kafka", tags: ["apple"],
+    q: "What is backpressure and how do you handle it in event-driven systems?",
+    a: `<strong>Backpressure</strong> occurs when a downstream system can't keep up with the rate of incoming messages.<br><br>
+<strong>Symptoms:</strong> Growing consumer lag, increasing memory usage, timeouts, OOMKills, cascading failures.<br><br>
+<strong>Handling strategies:</strong><ul>
+<li><strong>Buffering</strong> — Kafka naturally buffers (messages retained on disk). Consumer processes at its own pace. This is Kafka's biggest advantage over synchronous systems.</li>
+<li><strong>Rate limiting consumers</strong> — control <code>max.poll.records</code> and processing batch size</li>
+<li><strong>Scaling consumers</strong> — add instances (up to partition count) to increase throughput</li>
+<li><strong>Load shedding</strong> — drop low-priority messages when overloaded (e.g., skip analytics events, keep payment events)</li>
+<li><strong>Circuit breaker on downstream</strong> — if DB is slow, stop pulling messages temporarily rather than failing each one</li>
+</ul>
+<strong>SQS approach:</strong> Visibility timeout + maxReceiveCount. Failed messages retry with backoff, eventually land in DLQ.<br><br>
+<strong>Key insight:</strong> Async messaging (Kafka/SQS) inherently handles backpressure better than synchronous HTTP — the queue absorbs spikes.`
+  },
+  {
+    id: "kafka-07",
+    category: "kafka", tags: ["apple"],
+    q: "How do you design a notification system at scale? Walk through the architecture.",
+    a: `<strong>Requirements:</strong> Deliver personalized alerts to millions of users across web, mobile, email with high reliability and low latency.<br><br>
+<strong>Architecture:</strong><ol>
+<li><strong>Event producers</strong> — services publish events to Kafka (payment completed, price alert triggered, order shipped)</li>
+<li><strong>Notification service</strong> — consumes events, evaluates rules (who gets notified, via which channel, at what frequency)</li>
+<li><strong>Channel dispatchers</strong> — separate services per channel:<ul>
+<li>Push (APNs/FCM) — mobile notifications</li>
+<li>Email (SES/SendGrid)</li>
+<li>SMS (Twilio/SNS)</li>
+<li>In-app (WebSocket or polling)</li>
+</ul></li>
+<li><strong>Preference store</strong> — DynamoDB: user notification preferences, opt-outs, frequency caps</li>
+<li><strong>Deduplication</strong> — idempotency key per notification to prevent double-sends</li>
+</ol>
+<strong>Reliability:</strong><ul>
+<li>Kafka provides durability and replay if a dispatcher fails</li>
+<li>DLQ for undeliverable messages</li>
+<li>Separate queues per channel — email backlog doesn't block push</li>
+</ul>
+<strong>Scale:</strong> Partition by user ID — all notifications for a user processed in order. Add partitions and consumers for throughput.`
+  },
+  {
+    id: "kafka-08",
+    category: "kafka", tags: ["apple"],
+    q: "What is Kafka Connect and when would you use it?",
+    a: `<strong>Kafka Connect</strong> — a framework for streaming data between Kafka and external systems without writing code.<br><br>
+<strong>Source connectors</strong> — pull data INTO Kafka:<ul>
+<li>Database CDC (Debezium) — stream every row change from PostgreSQL/MySQL to Kafka</li>
+<li>S3 source — read files from S3 into Kafka topics</li>
+<li>JDBC source — poll database tables for changes</li>
+</ul>
+<strong>Sink connectors</strong> — push data OUT of Kafka:<ul>
+<li>Elasticsearch sink — index events for search</li>
+<li>S3 sink — archive events to data lake</li>
+<li>JDBC sink — write events to a database</li>
+</ul>
+<strong>Why use it:</strong><ul>
+<li>No custom consumer/producer code to maintain</li>
+<li>Handles offset management, retries, parallelism, exactly-once</li>
+<li>Huge ecosystem of pre-built connectors</li>
+</ul>
+<strong>Debezium + Outbox pattern:</strong> Application writes to outbox table → Debezium CDC captures the change → publishes to Kafka. This is the gold standard for reliable event publishing without dual-write problems.`
+  },
+  {
+    id: "kafka-09",
+    category: "kafka", tags: ["apple"],
+    q: "How do you handle schema evolution in Kafka?",
+    a: `<strong>Problem:</strong> Producers and consumers evolve independently. A schema change can break consumers.<br><br>
+<strong>Schema Registry</strong> (Confluent or AWS Glue):<ul>
+<li>Central store for Avro/Protobuf/JSON schemas</li>
+<li>Each message includes a <strong>schema ID</strong> in its header</li>
+<li>Consumer fetches schema from registry to deserialize</li>
+</ul>
+<strong>Compatibility modes:</strong><ul>
+<li><strong>BACKWARD</strong> — new schema can read old data (add optional fields, remove fields with defaults). Consumer-first deploy.</li>
+<li><strong>FORWARD</strong> — old schema can read new data. Producer-first deploy.</li>
+<li><strong>FULL</strong> — both directions. Safest but most restrictive.</li>
+</ul>
+<strong>Best practices:</strong><ul>
+<li>Use <strong>Avro or Protobuf</strong> — schema-enforced, compact binary</li>
+<li>Never remove required fields or change field types</li>
+<li>Add new fields with <strong>defaults</strong></li>
+<li>Use <strong>BACKWARD compatibility</strong> as default — deploy consumers first, then producers</li>
+<li>Register schemas in CI — fail the build if compatibility check fails</li>
+</ul>`
+  },
+  {
+    id: "kafka-10",
+    category: "kafka", tags: ["apple"],
+    q: "What is the difference between at-most-once, at-least-once, and exactly-once delivery?",
+    a: `<strong>At-most-once:</strong><ul>
+<li>Message delivered <strong>zero or one time</strong>. May be lost.</li>
+<li>Producer sends and forgets (<code>acks=0</code>). Consumer commits offset before processing.</li>
+<li>Use when: losing messages is acceptable (metrics sampling, logging)</li>
+</ul>
+<strong>At-least-once:</strong><ul>
+<li>Message delivered <strong>one or more times</strong>. Never lost, may be duplicated.</li>
+<li>Producer retries on failure (<code>acks=all</code>). Consumer commits offset after processing.</li>
+<li>Use when: duplicates are tolerable or consumer is idempotent</li>
+</ul>
+<strong>Exactly-once:</strong><ul>
+<li>Message delivered <strong>exactly one time</strong>. Never lost, never duplicated.</li>
+<li>Requires: idempotent producer + transactional read-process-write + <code>read_committed</code> consumers</li>
+<li>Use when: financial transactions, payment processing, inventory updates</li>
+</ul>
+<strong>Practical reality:</strong> True exactly-once is achieved through <strong>at-least-once + idempotent processing</strong>. Make your consumer idempotent (check if already processed using a unique ID) and you get effectively exactly-once.`
+  },
+
+  // ── Caching & Redis ─────────────────────────────────────────────
+  {
+    id: "cache-01",
+    category: "cache", tags: ["apple"],
+    q: "What are the common caching strategies? Compare cache-aside, write-through, and write-behind.",
+    a: `<strong>Cache-Aside (Lazy Loading):</strong><ol>
+<li>App checks cache first</li>
+<li>Cache miss → read from DB → write to cache → return</li>
+<li>Cache hit → return directly</li>
+</ol>
+Most common pattern. App controls cache population. Risk of stale data if DB is updated without invalidating cache.<br><br>
+<strong>Write-Through:</strong><ol>
+<li>App writes to cache AND DB simultaneously</li>
+<li>Cache is always consistent with DB</li>
+</ol>
+Higher write latency (two writes per operation). Cache is always fresh.<br><br>
+<strong>Write-Behind (Write-Back):</strong><ol>
+<li>App writes to cache only</li>
+<li>Cache asynchronously flushes to DB in batches</li>
+</ol>
+Lowest write latency. Risk of data loss if cache crashes before flush.<br><br>
+<strong>For payments:</strong> Cache-aside for read-heavy lookups (user profiles, exchange rates). Never cache-aside for financial balances — always read from DB (source of truth).`
+  },
+  {
+    id: "cache-02",
+    category: "cache", tags: ["apple"],
+    q: "What is Redis and what data structures does it offer?",
+    a: `<strong>Redis</strong> — in-memory data structure store used as cache, message broker, and database. <strong>Sub-millisecond latency.</strong><br><br>
+<strong>Core data structures:</strong><ul>
+<li><strong>String</strong> — simple key-value. Counters (<code>INCR</code>), session tokens, cached JSON.</li>
+<li><strong>Hash</strong> — field-value map under a key. User profiles, object attributes.</li>
+<li><strong>List</strong> — ordered collection. Job queues, activity feeds.</li>
+<li><strong>Set</strong> — unique unordered collection. Tags, unique visitors.</li>
+<li><strong>Sorted Set</strong> — set with scores. Leaderboards, rate limiting (sliding window), priority queues.</li>
+<li><strong>Stream</strong> — append-only log (like Kafka lite). Event sourcing, message queues with consumer groups.</li>
+</ul>
+<strong>Key features:</strong><ul>
+<li><strong>TTL</strong> — automatic expiration per key</li>
+<li><strong>Pub/Sub</strong> — real-time messaging (but no persistence)</li>
+<li><strong>Lua scripting</strong> — atomic multi-step operations</li>
+<li><strong>Transactions</strong> — MULTI/EXEC for atomic command batches</li>
+</ul>
+<strong>AWS:</strong> ElastiCache (managed Redis) or MemoryDB (durable Redis with persistence).`
+  },
+  {
+    id: "cache-03",
+    category: "cache", tags: ["apple"],
+    q: "How do you handle cache invalidation? Why is it considered hard?",
+    a: `<em>"There are only two hard things in computer science: cache invalidation and naming things."</em><br><br>
+<strong>Why it's hard:</strong> The cache and DB can get out of sync. Stale data causes bugs that are hard to reproduce and debug.<br><br>
+<strong>Invalidation strategies:</strong><ul>
+<li><strong>TTL-based</strong> — set expiration time. Simple but data can be stale until TTL expires. Good for: exchange rates, feature flags.</li>
+<li><strong>Event-driven</strong> — invalidate/update cache when DB changes (via CDC, Kafka events, or application code). More complex but more consistent.</li>
+<li><strong>Write-through</strong> — update cache on every write. Always consistent but higher write cost.</li>
+</ul>
+<strong>Common pitfalls:</strong><ul>
+<li><strong>Race condition:</strong> Thread A reads DB → Thread B updates DB + invalidates cache → Thread A writes stale data to cache</li>
+<li><strong>Fix:</strong> Delete cache entry (don't update it). Next read will fetch fresh data.</li>
+<li><strong>Thundering herd:</strong> Popular key expires → 1000 requests all miss cache → all hit DB simultaneously</li>
+<li><strong>Fix:</strong> Mutex/lock so only one request repopulates. Or use stale-while-revalidate.</li>
+</ul>`
+  },
+  {
+    id: "cache-04",
+    category: "cache", tags: ["apple"],
+    q: "How does Redis handle high availability and persistence?",
+    a: `<strong>Persistence modes:</strong><ul>
+<li><strong>RDB (snapshots)</strong> — periodic point-in-time snapshots to disk. Fast recovery but you lose data since last snapshot.</li>
+<li><strong>AOF (Append Only File)</strong> — logs every write command. More durable (configurable: every second or every write). Slower recovery (replay log).</li>
+<li><strong>RDB + AOF</strong> — best of both. Use AOF for durability, RDB for fast restarts.</li>
+</ul>
+<strong>High availability:</strong><ul>
+<li><strong>Redis Sentinel</strong> — monitors primary, auto-failover to replica if primary dies. Good for single-shard HA.</li>
+<li><strong>Redis Cluster</strong> — data sharded across multiple nodes (16384 hash slots). Horizontal scaling + HA. Each shard has primary + replicas.</li>
+</ul>
+<strong>AWS ElastiCache:</strong><ul>
+<li>Cluster mode disabled — single shard, up to 5 read replicas, multi-AZ failover</li>
+<li>Cluster mode enabled — multiple shards, auto-scaling, up to 500 nodes</li>
+</ul>
+<strong>For payments:</strong> Use Redis Cluster or ElastiCache cluster mode for idempotency key lookups, session caching, and rate limiting. AOF enabled for durability.`
+  },
+  {
+    id: "cache-05",
+    category: "cache", tags: ["apple"],
+    q: "How do you use Redis for rate limiting?",
+    a: `<strong>Sliding window with Sorted Sets:</strong><ol>
+<li>Key = <code>ratelimit:{user_id}</code></li>
+<li>On each request: <code>ZADD key timestamp timestamp</code></li>
+<li><code>ZREMRANGEBYSCORE key 0 (now - window_size)</code> — remove expired entries</li>
+<li><code>ZCARD key</code> — count requests in window</li>
+<li>If count > limit → reject (429)</li>
+</ol>
+All in one Lua script for atomicity.<br><br>
+<strong>Token bucket with simple keys:</strong><ol>
+<li>Key = <code>tokens:{user_id}</code>, value = remaining tokens</li>
+<li><code>DECR</code> on each request. Reject if ≤ 0.</li>
+<li>Separate process or TTL refills tokens periodically.</li>
+</ol>
+<strong>Fixed window (simplest):</strong><ul>
+<li><code>INCR ratelimit:{user_id}:{minute}</code> with <code>EXPIRE 60</code></li>
+<li>If count > limit → reject</li>
+<li>Edge case: 100 requests at :59 + 100 at :00 = 200 in 2 seconds</li>
+</ul>
+<strong>At Apple scale:</strong> Use ElastiCache Redis Cluster. Per-user + per-endpoint limits. Return <code>X-RateLimit-Remaining</code> and <code>Retry-After</code> headers.`
+  },
+  {
+    id: "cache-06",
+    category: "cache", tags: ["apple"],
+    q: "What is the thundering herd problem and how do you solve it?",
+    a: `<strong>Problem:</strong> A popular cache key expires. Hundreds of concurrent requests all miss the cache simultaneously and hit the database, potentially overwhelming it.<br><br>
+<strong>Solutions:</strong><ul>
+<li><strong>Mutex/lock</strong> — first request acquires a distributed lock (Redis <code>SET NX EX</code>), fetches from DB, populates cache, releases lock. Other requests wait or get stale data.</li>
+<li><strong>Stale-while-revalidate</strong> — serve stale cached data while one background request refreshes the cache. Users get fast (slightly stale) responses.</li>
+<li><strong>Proactive refresh</strong> — refresh cache <em>before</em> TTL expires using a background job or a "soft TTL" that triggers async refresh while still serving cached data.</li>
+<li><strong>Jittered TTLs</strong> — add randomness to TTL (<code>TTL = base + random(0, 60s)</code>) so keys don't all expire at the same time.</li>
+<li><strong>Request coalescing</strong> — at the application layer, deduplicate concurrent requests for the same key. Only one DB query, all waiters get the result.</li>
+</ul>
+<strong>Best practice:</strong> Combine jittered TTLs (prevention) + mutex (handling). For hot keys, use proactive refresh to ensure they never actually expire.`
+  },
+  {
+    id: "cache-07",
+    category: "cache", tags: ["apple"],
+    q: "When should you NOT use a cache?",
+    a: `<strong>Don't cache when:</strong><ul>
+<li><strong>Data changes on every read</strong> — cache hit rate ≈ 0%, overhead without benefit</li>
+<li><strong>Consistency is critical</strong> — financial balances, inventory counts. Stale data = incorrect charges or overselling.</li>
+<li><strong>Data is already fast to fetch</strong> — if DB query takes 2ms, adding a cache adds complexity for minimal gain</li>
+<li><strong>Cache adds more complexity than value</strong> — invalidation bugs, operational overhead of running Redis</li>
+<li><strong>Write-heavy workloads</strong> — if data changes more often than it's read, cache is constantly invalidated</li>
+</ul>
+<strong>Do cache when:</strong><ul>
+<li><strong>Read-heavy, write-light</strong> — user profiles, product catalog, exchange rates</li>
+<li><strong>Expensive to compute</strong> — aggregation results, ML predictions</li>
+<li><strong>High traffic on the same data</strong> — homepage content, popular products</li>
+<li><strong>Tolerance for staleness</strong> — a few seconds of stale data is acceptable</li>
+</ul>
+<strong>For payments:</strong> Cache user preferences, merchant configs, exchange rates. Do NOT cache account balances or transaction state.`
+  },
+  {
+    id: "cache-08",
+    category: "cache", tags: ["apple"],
+    q: "Compare ElastiCache Redis vs DynamoDB DAX vs CloudFront. When do you use each?",
+    a: `<strong>ElastiCache Redis:</strong><ul>
+<li>General-purpose caching for any data source</li>
+<li>Rich data structures (sorted sets, hashes, pub/sub)</li>
+<li>Use for: session stores, rate limiting, leaderboards, real-time counters</li>
+</ul>
+<strong>DynamoDB DAX:</strong><ul>
+<li>In-memory cache <strong>specifically for DynamoDB</strong></li>
+<li>Drop-in replacement — same DynamoDB API, no code changes</li>
+<li>Microsecond read latency for cached items</li>
+<li>Use for: DynamoDB read-heavy workloads. Item cache + query cache.</li>
+</ul>
+<strong>CloudFront (CDN):</strong><ul>
+<li>Edge caching for HTTP responses</li>
+<li>Caches API responses, static assets, at 400+ edge locations globally</li>
+<li>Use for: public API responses, static content, reducing origin load</li>
+</ul>
+<strong>Layered approach at scale:</strong><br>
+CloudFront (edge, public APIs) → ElastiCache Redis (app-level, session/rate-limit) → DAX (DynamoDB reads) → Database<br><br>
+Each layer reduces load on the next. For payments: CloudFront for public merchant APIs, Redis for idempotency keys and rate limiting, DAX for user preference lookups.`
+  },
+
+  // ── Event-Driven Architecture ───────────────────────────────────
+  {
+    id: "eda-01",
+    category: "eda", tags: ["apple"],
+    q: "What is event-driven architecture? Compare events, commands, and queries.",
+    a: `<strong>Event-driven architecture (EDA)</strong> — services communicate through asynchronous events instead of synchronous requests.<br><br>
+<strong>Event</strong> — something that <strong>happened</strong> (past tense, immutable fact):<br>
+<code>PaymentCompleted { orderId, amount, timestamp }</code><br>
+Producer doesn't know or care who consumes it. Loose coupling.<br><br>
+<strong>Command</strong> — a <strong>request to do something</strong> (directed at a specific service):<br>
+<code>ProcessPayment { orderId, amount }</code><br>
+Sender expects the receiver to act. Tighter coupling.<br><br>
+<strong>Query</strong> — a <strong>request for data</strong> (no side effects):<br>
+<code>GetPaymentStatus { paymentId }</code><br><br>
+<strong>Key EDA benefits:</strong><ul>
+<li><strong>Loose coupling</strong> — services don't know about each other</li>
+<li><strong>Scalability</strong> — consumers scale independently</li>
+<li><strong>Resilience</strong> — if a consumer is down, events are buffered</li>
+<li><strong>Auditability</strong> — event log is a natural audit trail</li>
+</ul>
+<strong>Tradeoff:</strong> Harder to debug (distributed, async), eventual consistency, event ordering complexity.`
+  },
+  {
+    id: "eda-02",
+    category: "eda", tags: ["apple"],
+    q: "What is CQRS? When would you use it?",
+    a: `<strong>CQRS (Command Query Responsibility Segregation)</strong> — use different models for reading and writing data.<br><br>
+<strong>Write side (Command):</strong><ul>
+<li>Optimized for <strong>business logic and validation</strong></li>
+<li>Normalized data model (e.g., relational DB)</li>
+<li>Publishes events when state changes</li>
+</ul>
+<strong>Read side (Query):</strong><ul>
+<li>Optimized for <strong>query patterns</strong></li>
+<li>Denormalized projections (e.g., materialized views in DynamoDB, Elasticsearch)</li>
+<li>Updated asynchronously by consuming events from write side</li>
+</ul>
+<strong>When to use:</strong><ul>
+<li>Read and write patterns are <strong>very different</strong> (complex writes, simple reads — or vice versa)</li>
+<li>Need to <strong>scale reads and writes independently</strong></li>
+<li>Combined with <strong>event sourcing</strong> — events are the write model, projections are the read model</li>
+</ul>
+<strong>When NOT to use:</strong> Simple CRUD apps. The added complexity isn't worth it for straightforward read/write patterns.<br><br>
+<strong>Payments example:</strong> Write model processes payments (complex validation, state machine). Read model serves transaction history (denormalized, fast queries).`
+  },
+  {
+    id: "eda-03",
+    category: "eda", tags: ["apple"],
+    q: "What is the difference between pub/sub and point-to-point messaging?",
+    a: `<strong>Point-to-Point (Queue):</strong><ul>
+<li>One message → <strong>one consumer</strong></li>
+<li>Message is removed after processing</li>
+<li>Used for: task distribution, work queues, job processing</li>
+<li>Example: SQS, RabbitMQ queue</li>
+</ul>
+<strong>Pub/Sub (Topic):</strong><ul>
+<li>One message → <strong>all subscribers</strong></li>
+<li>Each subscriber gets its own copy</li>
+<li>Used for: event broadcasting, notifications, data replication</li>
+<li>Example: SNS, Kafka consumer groups, Redis Pub/Sub</li>
+</ul>
+<strong>Kafka is both:</strong><ul>
+<li><strong>Point-to-point</strong> within a consumer group (each partition → one consumer)</li>
+<li><strong>Pub/sub</strong> across consumer groups (each group gets all messages independently)</li>
+</ul>
+<strong>Pattern for payments:</strong><br>
+<code>PaymentCompleted</code> event published to Kafka topic. Multiple consumer groups subscribe independently: notification service sends receipt, analytics service tracks revenue, loyalty service awards points. Each processes at its own pace.`
+  },
+  {
+    id: "eda-04",
+    category: "eda", tags: ["apple"],
+    q: "How do you handle event ordering across microservices?",
+    a: `<strong>The problem:</strong> Events for the same entity can arrive out of order, especially across partitions or services.<br><br>
+<strong>Strategies:</strong><br><br>
+<strong>1. Partition by entity ID:</strong><ul>
+<li>All events for user-123 go to the same Kafka partition</li>
+<li>Guarantees ordering for that entity. Simplest approach.</li>
+</ul>
+<strong>2. Event versioning:</strong><ul>
+<li>Include a <strong>sequence number or version</strong> in each event</li>
+<li>Consumer rejects/requeues events that arrive out of order</li>
+<li><code>if event.version != currentVersion + 1 → requeue</code></li>
+</ul>
+<strong>3. Timestamp-based reconciliation:</strong><ul>
+<li>Use <strong>last-write-wins</strong> with timestamps</li>
+<li>Only apply event if its timestamp > current state timestamp</li>
+<li>Simple but can lose updates in rare clock-skew scenarios</li>
+</ul>
+<strong>4. Causal ordering:</strong><ul>
+<li>Track dependencies: event B depends on event A</li>
+<li>Buffer event B until event A is processed</li>
+<li>Most correct, most complex</li>
+</ul>
+<strong>Practical advice:</strong> Partition by entity key covers 90% of cases. Only add complexity when you've proven you need it.`
+  },
+  {
+    id: "eda-05",
+    category: "eda", tags: ["apple"],
+    q: "What is event schema evolution and how do you manage it?",
+    a: `<strong>Problem:</strong> As your system evolves, event schemas change. Old events in Kafka are still there. New consumers need to read old events. Old consumers need to handle new events.<br><br>
+<strong>Rules for safe evolution:</strong><ul>
+<li><strong>Add fields</strong> — always safe if optional with defaults</li>
+<li><strong>Remove fields</strong> — safe if consumers handle missing fields</li>
+<li><strong>Rename fields</strong> — BREAKING. Add new field, deprecate old one.</li>
+<li><strong>Change field types</strong> — BREAKING. Never do this.</li>
+</ul>
+<strong>Schema Registry:</strong><ul>
+<li>Central authority for event schemas (Confluent, AWS Glue)</li>
+<li>Enforces compatibility checks on every schema change</li>
+<li>Producers register schema → get schema ID → embed in message</li>
+<li>Consumers fetch schema by ID → deserialize correctly</li>
+</ul>
+<strong>Versioned events pattern:</strong><ul>
+<li>Include <code>eventType</code> and <code>version</code> in every event</li>
+<li>Consumers switch on version: <code>PaymentCompleted.v1</code> vs <code>PaymentCompleted.v2</code></li>
+<li>Write adapters to transform old versions to new</li>
+</ul>
+<strong>Use Avro or Protobuf</strong> — both support schema evolution natively. Avoid plain JSON (no schema enforcement, no compatibility checks).`
+  },
+  {
+    id: "eda-06",
+    category: "eda", tags: ["apple"],
+    q: "What is the Strangler Fig pattern for migrating to event-driven?",
+    a: `<strong>Problem:</strong> You have a monolith making synchronous calls. You want to move to event-driven microservices. You can't rewrite everything at once.<br><br>
+<strong>Strangler Fig pattern:</strong> Gradually replace pieces of the monolith by intercepting and redirecting functionality, like a strangler fig tree growing around a host tree.<br><br>
+<strong>Steps:</strong><ol>
+<li><strong>Intercept</strong> — put an API gateway or event router in front of the monolith</li>
+<li><strong>Extract</strong> — build a new microservice for one bounded context (e.g., notifications)</li>
+<li><strong>Redirect</strong> — route that traffic/events to the new service. Monolith still handles everything else.</li>
+<li><strong>Repeat</strong> — extract the next bounded context</li>
+<li><strong>Retire</strong> — once all functionality is extracted, decommission the monolith</li>
+</ol>
+<strong>Event-driven migration variant:</strong><ul>
+<li>Monolith starts <strong>publishing events</strong> for key state changes</li>
+<li>New microservices <strong>consume events</strong> instead of calling monolith APIs</li>
+<li>Dual-write period: monolith handles requests AND publishes events</li>
+<li>Eventually, new services own the domain and monolith is removed</li>
+</ul>
+<strong>Key:</strong> Both old and new systems run simultaneously. No big-bang cutover. Rollback is always possible.`
+  },
+  {
+    id: "eda-07",
+    category: "eda", tags: ["apple"],
+    q: "How do you test event-driven systems?",
+    a: `Event-driven systems are harder to test because they're async and distributed.<br><br>
+<strong>Unit tests:</strong><ul>
+<li>Test event handlers in isolation — given event X, assert state Y</li>
+<li>Mock the message broker. Focus on business logic.</li>
+</ul>
+<strong>Integration tests:</strong><ul>
+<li>Use <strong>embedded Kafka</strong> (Testcontainers) or <strong>LocalStack</strong> for SQS/SNS</li>
+<li>Produce event → assert consumer processes correctly → verify DB state</li>
+<li>Test schema serialization/deserialization round-trip</li>
+</ul>
+<strong>Contract tests:</strong><ul>
+<li>Verify producer events match consumer expectations</li>
+<li>Tools: Pact, Schema Registry compatibility checks in CI</li>
+<li>Catch breaking schema changes before deploy</li>
+</ul>
+<strong>End-to-end tests:</strong><ul>
+<li>Publish event → wait for downstream effect (notification sent, record created)</li>
+<li>Use <strong>polling with timeout</strong> — assert eventual state within N seconds</li>
+<li>Avoid: flaky timing-dependent assertions</li>
+</ul>
+<strong>Chaos testing:</strong><ul>
+<li>Kill a consumer mid-processing — does it recover and reprocess?</li>
+<li>Inject duplicate events — does the consumer handle them idempotently?</li>
+<li>Simulate network partition between producer and broker</li>
+</ul>`
+  },
+  {
+    id: "eda-08",
+    category: "eda", tags: ["apple"],
+    q: "What is Change Data Capture (CDC) and how does Debezium work?",
+    a: `<strong>CDC</strong> captures row-level changes (INSERT, UPDATE, DELETE) from a database and streams them as events.<br><br>
+<strong>Why CDC over application events:</strong><ul>
+<li>No dual-write problem — changes captured directly from the DB transaction log</li>
+<li>Captures ALL changes (including direct DB updates, migrations, scripts)</li>
+<li>Zero application code changes needed</li>
+</ul>
+<strong>Debezium</strong> — open-source CDC platform, runs as Kafka Connect connectors:<ol>
+<li>Reads the database's <strong>transaction log</strong> (PostgreSQL WAL, MySQL binlog)</li>
+<li>Converts each change to a <strong>structured event</strong> (before/after state)</li>
+<li>Publishes to Kafka topic (one topic per table by default)</li>
+</ol>
+<strong>Event structure:</strong><pre><code>{
+  "op": "u",  // c=create, u=update, d=delete
+  "before": { "id": 1, "status": "pending" },
+  "after":  { "id": 1, "status": "completed" },
+  "source": { "table": "payments", "lsn": "..." }
+}</code></pre>
+<strong>Use cases:</strong> Cache invalidation, search index sync, data replication, audit logs, microservice data sync, powering the transactional outbox pattern.`
   }
 ];

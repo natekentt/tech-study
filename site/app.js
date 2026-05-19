@@ -113,7 +113,10 @@
     apis: "APIs at Scale",
     aws: "AWS Cloud-Native",
     data: "Database Optimization",
-    payments: "Payments & Commerce"
+    payments: "Payments & Commerce",
+    kafka: "Kafka & Messaging",
+    cache: "Caching & Redis",
+    eda: "Event-Driven Architecture"
   };
 
   // ── URL state ─────────────────────────────────────────────────
