@@ -116,7 +116,8 @@
     payments: "Payments & Commerce",
     kafka: "Kafka & Messaging",
     cache: "Caching & Redis",
-    eda: "Event-Driven Architecture"
+    eda: "Event-Driven Architecture",
+    terraform: "Terraform & IAM"
   };
 
   // ── URL state ─────────────────────────────────────────────────

@@ -3131,5 +3131,252 @@ Sender expects the receiver to act. Tighter coupling.<br><br>
   "source": { "table": "payments", "lsn": "..." }
 }</code></pre>
 <strong>Use cases:</strong> Cache invalidation, search index sync, data replication, audit logs, microservice data sync, powering the transactional outbox pattern.`
+  },
+
+  // ── Terraform & IAM ─────────────────────────────────────────────
+  {
+    id: "tf-01",
+    category: "terraform", tags: ["apple"],
+    q: "What is Terraform and how does it work? Explain the core workflow.",
+    a: `<strong>Terraform</strong> — declarative Infrastructure as Code (IaC). You describe the desired state, Terraform figures out how to get there.<br><br>
+<strong>Core workflow:</strong><ol>
+<li><strong><code>terraform init</code></strong> — download providers (AWS, Azure, GCP), initialize backend</li>
+<li><strong><code>terraform plan</code></strong> — compare desired state (code) vs actual state (state file). Show what will change.</li>
+<li><strong><code>terraform apply</code></strong> — execute the plan. Create/update/destroy resources.</li>
+<li><strong><code>terraform destroy</code></strong> — tear down all managed resources</li>
+</ol>
+<strong>Key concepts:</strong><ul>
+<li><strong>State file</strong> — JSON file tracking what Terraform manages. Source of truth for drift detection.</li>
+<li><strong>Providers</strong> — plugins that talk to cloud APIs (AWS, Azure, K8s, Datadog)</li>
+<li><strong>Resources</strong> — infrastructure objects (<code>aws_lambda_function</code>, <code>aws_dynamodb_table</code>)</li>
+<li><strong>Data sources</strong> — read-only queries to existing infrastructure</li>
+</ul>
+<strong>Remote state:</strong> Store state in S3 + DynamoDB (locking) so teams can collaborate safely. Never commit state files to git.`
+  },
+  {
+    id: "tf-02",
+    category: "terraform", tags: ["apple"],
+    q: "What are IAM roles, policies, and trust policies? How do they fit together?",
+    a: `<strong>IAM Policy</strong> — a JSON document defining <strong>what actions</strong> are allowed/denied on <strong>which resources</strong>:<pre><code>{
+  "Effect": "Allow",
+  "Action": ["s3:GetObject", "s3:PutObject"],
+  "Resource": "arn:aws:s3:::my-bucket/*"
+}</code></pre>
+<strong>IAM Role</strong> — an identity with policies attached. Unlike a user, a role is <strong>assumed</strong> by services, applications, or other accounts. No permanent credentials.<br><br>
+<strong>Trust Policy</strong> — attached to a role, defines <strong>who can assume it</strong>:<pre><code>{
+  "Effect": "Allow",
+  "Principal": { "Service": "lambda.amazonaws.com" },
+  "Action": "sts:AssumeRole"
+}</code></pre>
+<strong>How they fit together:</strong><ul>
+<li><strong>Trust policy</strong> = who can wear this hat (principal)</li>
+<li><strong>Permission policy</strong> = what the hat lets you do (actions on resources)</li>
+<li>Lambda assumes a role → gets temporary credentials → uses permissions from attached policies</li>
+</ul>
+<strong>In Terraform:</strong> <code>aws_iam_role</code> (with <code>assume_role_policy</code>) + <code>aws_iam_role_policy_attachment</code>.`
+  },
+  {
+    id: "tf-03",
+    category: "terraform", tags: ["apple"],
+    q: "What is a service principal and how does it differ from a user?",
+    a: `<strong>Service principal</strong> — an identity used by an application or service (not a human) to authenticate and access resources.<br><br>
+<strong>In AWS:</strong><ul>
+<li>IAM Roles assumed by services (Lambda, EC2, EKS pods)</li>
+<li>Trust policy grants <code>sts:AssumeRole</code> to the service principal: <code>"Principal": { "Service": "lambda.amazonaws.com" }</code></li>
+<li>No long-lived credentials — uses <strong>temporary STS tokens</strong></li>
+</ul>
+<strong>In Azure AD:</strong><ul>
+<li>App Registration creates a service principal</li>
+<li>Authenticates via client ID + client secret (or certificate)</li>
+<li>Used for: CI/CD pipelines, Databricks jobs, API integrations</li>
+</ul>
+<strong>Key differences from user:</strong><ul>
+<li>No password, no MFA, no console login</li>
+<li>Credentials are <strong>programmatic</strong> (tokens, secrets, certificates)</li>
+<li>Scoped to specific service — easier to audit and rotate</li>
+</ul>
+<strong>Best practice:</strong> Every service gets its own principal with least-privilege permissions. Never share credentials across services. Rotate secrets automatically.`
+  },
+  {
+    id: "tf-04",
+    category: "terraform", tags: ["apple"],
+    q: "How does cross-account access work in AWS? Walk through the AssumeRole flow.",
+    a: `<strong>Scenario:</strong> Account A (dev) needs to access an S3 bucket in Account B (prod).<br><br>
+<strong>Setup:</strong><ol>
+<li><strong>Account B</strong> creates a role (<code>cross-account-s3-reader</code>) with:<ul>
+<li>Permission policy: <code>s3:GetObject</code> on the target bucket</li>
+<li>Trust policy: allows Account A's role/user to assume it</li>
+</ul><pre><code>"Principal": { "AWS": "arn:aws:iam::ACCOUNT_A_ID:role/dev-role" }</code></pre></li>
+<li><strong>Account A</strong> grants its role permission to call <code>sts:AssumeRole</code> on Account B's role</li>
+</ol>
+<strong>Runtime flow:</strong><ol>
+<li>Service in Account A calls <code>sts:AssumeRole</code> with Account B's role ARN</li>
+<li>STS validates the trust policy</li>
+<li>Returns <strong>temporary credentials</strong> (access key, secret key, session token) valid for 1-12 hours</li>
+<li>Service uses temporary credentials to access Account B's S3 bucket</li>
+</ol>
+<strong>In Terraform:</strong><br>
+Use <code>provider</code> alias with <code>assume_role</code> block to manage resources in another account from a single Terraform config.`
+  },
+  {
+    id: "tf-05",
+    category: "terraform", tags: ["apple"],
+    q: "What are allow lists and deny lists in IAM? How do SCPs work?",
+    a: `<strong>Allow list (whitelist) strategy:</strong><ul>
+<li>Default deny everything. Explicitly allow only what's needed.</li>
+<li><code>"Effect": "Allow", "Action": ["s3:GetObject"]</code></li>
+<li>Most secure — follows least privilege</li>
+</ul>
+<strong>Deny list (blocklist) strategy:</strong><ul>
+<li>Allow broad permissions, explicitly deny dangerous actions.</li>
+<li><code>"Effect": "Deny", "Action": ["s3:DeleteBucket"]</code></li>
+<li>Easier to start with but riskier — new actions are allowed by default</li>
+</ul>
+<strong>Service Control Policies (SCPs):</strong><ul>
+<li>Organization-level guardrails applied to <strong>entire AWS accounts</strong></li>
+<li>SCPs are <strong>deny filters</strong> — they restrict what accounts CAN do, even if IAM allows it</li>
+<li>SCP Allow ∩ IAM Allow = effective permissions</li>
+</ul>
+<strong>Common SCPs:</strong><ul>
+<li>Deny access outside approved regions</li>
+<li>Deny creation of IAM users with long-lived keys</li>
+<li>Deny disabling CloudTrail or GuardDuty</li>
+<li>Require encryption on S3 buckets</li>
+</ul>
+<strong>In Terraform:</strong> <code>aws_organizations_policy</code> + <code>aws_organizations_policy_attachment</code>.`
+  },
+  {
+    id: "tf-06",
+    category: "terraform", tags: ["apple"],
+    q: "How do you structure Terraform for a multi-account, multi-environment setup?",
+    a: `<strong>Account structure:</strong><ul>
+<li>Separate AWS accounts per environment (dev, staging, prod) + shared services account</li>
+<li>AWS Organizations with SCPs for guardrails</li>
+</ul>
+<strong>Terraform structure:</strong><pre><code>infra/
+├── modules/          # Reusable modules
+│   ├── lambda/
+│   ├── dynamodb/
+│   └── networking/
+├── environments/
+│   ├── dev/          # Dev account config
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── backend.tf  # S3 state for dev
+│   ├── staging/
+│   └── prod/
+└── global/           # Cross-account (IAM, DNS)</code></pre>
+<strong>Key patterns:</strong><ul>
+<li><strong>Modules</strong> — reusable components. Same module, different variables per env.</li>
+<li><strong>Remote state per environment</strong> — separate S3 buckets, separate DynamoDB lock tables</li>
+<li><strong>Provider aliases</strong> — manage cross-account resources from one config</li>
+<li><strong>Workspaces</strong> — avoid for environments (too risky). Use separate directories instead.</li>
+</ul>
+<strong>CI/CD:</strong> <code>terraform plan</code> on PR (review diff). <code>terraform apply</code> on merge to main. Separate pipelines per environment with approval gates for prod.`
+  },
+  {
+    id: "tf-07",
+    category: "terraform", tags: ["apple"],
+    q: "What is Terraform state and why is it critical? What happens when state gets corrupted?",
+    a: `<strong>State file</strong> tracks the mapping between your Terraform config and real-world resources. Without it, Terraform doesn't know what it manages.<br><br>
+<strong>What state contains:</strong><ul>
+<li>Resource IDs (e.g., Lambda ARN, DynamoDB table name)</li>
+<li>Attribute values (current configuration)</li>
+<li>Dependencies between resources</li>
+<li>Metadata (provider versions, serial number)</li>
+</ul>
+<strong>If state is lost/corrupted:</strong><ul>
+<li>Terraform thinks resources don't exist → tries to recreate them → <strong>fails</strong> (names/IDs conflict)</li>
+<li>Or worse: creates duplicates</li>
+</ul>
+<strong>Recovery:</strong><ul>
+<li><code>terraform import</code> — manually re-import existing resources into state</li>
+<li>Restore from S3 versioning (if remote backend)</li>
+<li><code>terraform state rm</code> — remove corrupted entries, then re-import</li>
+</ul>
+<strong>Prevention:</strong><ul>
+<li><strong>Remote backend</strong> (S3 + DynamoDB locking) — prevents concurrent modifications</li>
+<li><strong>State versioning</strong> — S3 bucket versioning for rollback</li>
+<li><strong>Never edit state manually</strong> — use <code>terraform state mv/rm/import</code></li>
+<li><strong>Lock state during operations</strong> — DynamoDB lock table prevents race conditions</li>
+</ul>`
+  },
+  {
+    id: "tf-08",
+    category: "terraform", tags: ["apple"],
+    q: "How do you manage secrets in Terraform without exposing them?",
+    a: `<strong>Problem:</strong> Terraform needs secrets (DB passwords, API keys) but state files store values in <strong>plaintext</strong>.<br><br>
+<strong>Strategies:</strong><ul>
+<li><strong>AWS Secrets Manager / SSM Parameter Store:</strong><ul>
+<li>Store secrets externally. Reference via <code>data "aws_secretsmanager_secret_version"</code></li>
+<li>Secret value never in Terraform code — only the ARN/name reference</li>
+</ul></li>
+<li><strong>Environment variables:</strong><ul>
+<li><code>TF_VAR_db_password</code> — Terraform reads it automatically</li>
+<li>Set in CI/CD pipeline secrets, never in code</li>
+</ul></li>
+<li><strong><code>sensitive = true</code></strong> on variables and outputs:<ul>
+<li>Hides values in plan/apply output</li>
+<li>Does NOT encrypt in state — state is still plaintext</li>
+</ul></li>
+</ul>
+<strong>State protection:</strong><ul>
+<li>Encrypt S3 backend with KMS</li>
+<li>Restrict state bucket access to CI/CD pipeline role only</li>
+<li>Enable S3 bucket versioning + access logging</li>
+</ul>
+<strong>Best practice:</strong> Generate secrets in Secrets Manager (<code>aws_secretsmanager_secret</code>), reference by ARN in other resources. Application reads secret at runtime — Terraform never sees the value.`
+  },
+  {
+    id: "tf-09",
+    category: "terraform", tags: ["apple"],
+    q: "What are Terraform modules? How do you design reusable modules?",
+    a: `<strong>Module</strong> — a reusable, encapsulated set of Terraform resources. Like a function for infrastructure.<br><br>
+<strong>Structure:</strong><pre><code>modules/lambda/
+├── main.tf        # Resources
+├── variables.tf   # Inputs
+├── outputs.tf     # Return values
+└── README.md</code></pre>
+<strong>Usage:</strong><pre><code>module "payment_processor" {
+  source      = "./modules/lambda"
+  name        = "payment-processor"
+  runtime     = "java21"
+  memory      = 512
+  environment = var.environment
+}</code></pre>
+<strong>Design principles:</strong><ul>
+<li><strong>Single responsibility</strong> — one module = one logical component</li>
+<li><strong>Expose variables for what changes</strong> — environment, name, size. Hardcode what doesn't.</li>
+<li><strong>Sensible defaults</strong> — <code>variable "memory" { default = 256 }</code></li>
+<li><strong>Output everything consumers need</strong> — ARN, endpoint, security group ID</li>
+<li><strong>Version modules</strong> — use git tags: <code>source = "git::https://...?ref=v2.1.0"</code></li>
+</ul>
+<strong>Anti-patterns:</strong> God modules that create 50 resources. Modules that require 30 variables. Modules with hidden side effects.`
+  },
+  {
+    id: "tf-10",
+    category: "terraform", tags: ["apple"],
+    q: "How do you handle IAM for EKS pods? Explain IRSA.",
+    a: `<strong>Problem:</strong> Pods need AWS permissions (read S3, write DynamoDB). Assigning permissions to the EC2 node role gives <strong>every pod on the node</strong> the same permissions — violates least privilege.<br><br>
+<strong>IRSA (IAM Roles for Service Accounts):</strong><ul>
+<li>Each Kubernetes ServiceAccount is linked to its own <strong>IAM role</strong></li>
+<li>Pods using that ServiceAccount get <strong>only that role's permissions</strong></li>
+<li>Different pods on the same node can have different permissions</li>
+</ul>
+<strong>How it works:</strong><ol>
+<li>EKS cluster has an <strong>OIDC identity provider</strong></li>
+<li>IAM role trust policy trusts the EKS OIDC provider for a specific ServiceAccount:<pre><code>"Condition": {
+  "StringEquals": {
+    "oidc.eks....:sub": "system:serviceaccount:payments:payment-svc"
+  }
+}</code></pre></li>
+<li>Pod's ServiceAccount annotated with the IAM role ARN</li>
+<li>AWS SDK in the pod automatically gets temporary credentials via STS</li>
+</ol>
+<strong>In Terraform:</strong><ul>
+<li><code>aws_iam_openid_connect_provider</code> — register EKS OIDC</li>
+<li><code>aws_iam_role</code> — trust policy scoped to specific ServiceAccount</li>
+<li><code>kubernetes_service_account</code> — annotate with role ARN</li>
+</ul>`
   }
 ];
